@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/AppGestio/static/css/main.259a04fd.css",
+    "main.js": "/AppGestio/static/js/main.02fe7545.js",
+    "static/js/453.618a8f67.chunk.js": "/AppGestio/static/js/453.618a8f67.chunk.js",
+    "index.html": "/AppGestio/index.html",
+    "main.259a04fd.css.map": "/AppGestio/static/css/main.259a04fd.css.map",
+    "main.02fe7545.js.map": "/AppGestio/static/js/main.02fe7545.js.map",
+    "453.618a8f67.chunk.js.map": "/AppGestio/static/js/453.618a8f67.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.259a04fd.css",
+    "static/js/main.02fe7545.js"
+  ]
+}
