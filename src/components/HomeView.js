@@ -48,7 +48,7 @@ const HomeView = ({ onIncidentsClick, onCalendarClick, onGroupsClick, onTICIncid
 
     loadProfile();
     fetchAvisos();
-  }, [accessToken, profile, setProfile, setError, setCurrentScreen]);
+  }, [accessToken, setProfile, setError, setCurrentScreen]);
 
   if (!profile) {
     return <div className="flex h-screen items-center justify-center">Carregant perfil...</div>; // Or a loading spinner

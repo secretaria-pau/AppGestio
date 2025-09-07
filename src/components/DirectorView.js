@@ -10,18 +10,25 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from './ui/
 import { X, ArrowLeft, BookOpen, MessageSquare, Users } from "lucide-react";
 
 const DirectorView = ({ config, classrooms, teachers, onSyncLists, onUpdateStudents, onUpdateTeachers, onSyncMembers, loading, accessToken, loadData, profile, onBackClick }) => {
+  // Log classrooms prop on initial render and updates
+  useEffect(() => {
+    console.log('DirectorView - classrooms prop:', classrooms);
+  }, [classrooms]);
   const [selectedTeacher, setSelectedTeacher] = useState('');
   const [editingClassroom, setEditingClassroom] = useState(null);
 
   const filteredClassrooms = (() => {
-    console.log('Filtering with selectedTeacher:', selectedTeacher);
-    if (selectedTeacher) {
-      return classrooms.filter(classroom => {
+    console.log('Filtering with selectedTeacher (inside filteredClassrooms):', selectedTeacher);
+    let result;
+    if (selectedTeacher === '') {
+      result = classrooms;
+    } else {
+      result = classrooms.filter(classroom => {
         return teachers.some(teacher => teacher.email === selectedTeacher && teacher.classroomName === classroom.name);
       });
-    } else {
-      return classrooms;
     }
+    console.log('filteredClassrooms result:', result);
+    return result;
   })();
 
   const handleEditClick = (classroom) => {
@@ -90,7 +97,10 @@ const DirectorView = ({ config, classrooms, teachers, onSyncLists, onUpdateStude
         <label htmlFor="teacher-select" className="block text-sm font-medium text-gray-700 mb-1">Selecciona un professor:</label>
         
 
-        <Select value={selectedTeacher} onValueChange={(value) => { console.log('Selected Teacher:', value); setSelectedTeacher(value); }}>
+        <Select value={selectedTeacher} onValueChange={(value) => {
+          console.log('Selected Teacher (onValueChange):', value);
+          setSelectedTeacher(value);
+        }}>
           <SelectTrigger className="w-[240px]">
             <SelectValue placeholder="Selecciona un professor" value={selectedTeacher || "Selecciona un professor"} />
           </SelectTrigger>
@@ -158,7 +168,7 @@ const DirectorView = ({ config, classrooms, teachers, onSyncLists, onUpdateStude
               <DialogTitle>Editar Classroom: {editingClassroom.name}</DialogTitle>
             </DialogHeader>
             <div className="p-4">
-              <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
                 <div className="grid grid-cols-4 items-center gap-4">
                   <label htmlFor="group-input" className="text-right">Google Group associat</label>
                   <Input id="group-input" className="col-span-3" defaultValue={config.find(c => c[5] === editingClassroom.id)[2]} />

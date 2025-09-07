@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { getConfig, getSheetData, updateConfig, callGASFunction } from '../googleServices';
 import AdminView from './AdminView';
 import UserGroupsView from './UserGroupsView';
-import { Button, Alert, AlertDescription, AlertTitle } from "./ui";
+import { Button, Alert, AlertDescription, AlertTitle, Card, CardContent } from "./ui";
+import { ArrowLeft } from 'lucide-react';
 
 const MyGroupsView = ({ onBackClick, accessToken, profile }) => {
   const [config, setConfig] = useState([]);
@@ -10,6 +11,7 @@ const MyGroupsView = ({ onBackClick, accessToken, profile }) => {
   const [teachers, setTeachers] = useState([]);
   const [groups, setGroups] = useState([]);
   const [chats, setChats] = useState([]);
+  const [students, setStudents] = useState([]); // Add students state
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -17,25 +19,20 @@ const MyGroupsView = ({ onBackClick, accessToken, profile }) => {
     if (!accessToken) return;
     setLoading(true);
     try {
-      const [configData, classroomsData, teachersData, groupsData, chatsData] = await Promise.all([
+      const [configData, classroomsData, teachersData, groupsData, chatsData, studentsData] = await Promise.all([
         getConfig(accessToken),
         getSheetData('Llista Classrooms', accessToken),
         getSheetData('Professors', accessToken),
         getSheetData('Llista Groups', accessToken),
         getSheetData('Llista Chats', accessToken),
+        getSheetData('Alumnes', accessToken), // Fetch students
       ]);
-      // console.log('Config data loaded:', configData);
       setConfig(configData);
-
-      // Store both display name and ID for chats
       setChats(chatsData.map(row => ({ displayName: row[0], id: row[2] })));
-
-      // Store group emails for the dropdown, and also map group emails to their URLs
       const groupEmails = groupsData.map(row => row[0]);
-      setGroups(groupEmails); // For the dropdown
-      const groupUrlMap = new Map(groupsData.map(row => [row[0], row[1]])); // Map email to URL
+      setGroups(groupEmails);
+      const groupUrlMap = new Map(groupsData.map(row => [row[0], row[1]]));
 
-      // Map classrooms, enriching with groupName, chatName, chatId, and groupUrl
       setClassrooms(classroomsData.map(row => {
         const classroomId = row[2];
         const configEntry = configData.find(c => c[5] === classroomId);
@@ -44,14 +41,15 @@ const MyGroupsView = ({ onBackClick, accessToken, profile }) => {
           name: row[0],
           alternateLink: row[1],
           id: classroomId,
-          groupName: groupEmail, // This is the group email
-          groupUrl: groupUrlMap.get(groupEmail) || '', // Get group URL from the map
+          groupName: groupEmail,
+          groupUrl: groupUrlMap.get(groupEmail) || '',
           chatName: configEntry ? configEntry[3] : '',
-          chatId: configEntry ? chatsData.find(chatRow => chatRow[0] === configEntry[3])?.[2] : '', // Get chat ID from chatsData
+          chatId: configEntry ? chatsData.find(chatRow => chatRow[0] === configEntry[3])?.[2] : '',
         };
       }));
 
       setTeachers(teachersData.map(row => ({ name: row[1], email: row[2], classroomName: row[0] })));
+      setStudents(studentsData); // Set students state
 
     } catch (err) {
       setError(err.message);
@@ -71,7 +69,7 @@ const MyGroupsView = ({ onBackClick, accessToken, profile }) => {
     try {
       await updateConfig(newConfig, accessToken);
       alert('Configuració actualitzada correctament!');
-      loadData(); // Reload data to show changes
+      loadData();
     } catch (err) {
       setError(err.message);
     } finally {
@@ -85,7 +83,7 @@ const MyGroupsView = ({ onBackClick, accessToken, profile }) => {
     try {
       await callGASFunction('actualitzarLlistes', accessToken);
       alert(`Sincronització de llistes iniciada. Revisa la teva fulla de càlcul per l'estat.`);
-      loadData(); // Reload data after assuming success
+      loadData();
     } catch (err) {
       setError("Error en iniciar la sincronització de llistes. Revisa la consola per a més detalls.");
       console.error(err);
@@ -144,7 +142,7 @@ const MyGroupsView = ({ onBackClick, accessToken, profile }) => {
 
     switch (profile.role) {
       case 'Usuari':
-        return <UserGroupsView classrooms={classrooms} teachers={teachers} profile={profile} accessToken={accessToken} />;
+        return <UserGroupsView classrooms={classrooms} teachers={teachers} students={students} profile={profile} accessToken={accessToken} />;
       case 'Gestor':
       case 'Direcció':
         return <AdminView
@@ -153,6 +151,7 @@ const MyGroupsView = ({ onBackClick, accessToken, profile }) => {
           teachers={teachers}
           groups={groups}
           chats={chats}
+          students={students}
           onUpdateConfig={handleUpdateConfig}
           loading={loading}
           profile={profile}
@@ -168,17 +167,20 @@ const MyGroupsView = ({ onBackClick, accessToken, profile }) => {
   };
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">Grups d'alumnes</h2>
-        <div className="flex items-center">
-          <div className="text-right mr-3">
-            <div><strong>{profile.name}</strong> ({profile.role})</div>
-            <div><small>{profile.email}</small></div>
+    <div className="p-4 sm:p-6 lg:p-8">
+        <header className="flex justify-between items-center mb-6 pb-4 border-b">
+          <div className="flex items-center gap-4">
+            <Button onClick={onBackClick} className="bg-primary-light text-white">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Tornar
+            </Button>
+            <h1 className="text-2xl font-bold">Grups d'alumnes</h1>
           </div>
-          <Button onClick={onBackClick} variant="outline">Tornar</Button>
-        </div>
-      </div>
+          <div className="text-right">
+            <div className="font-semibold">{profile.name} ({profile.role})</div>
+            <div className="text-xs text-muted-foreground">{profile.email}</div>
+          </div>
+        </header>
 
       {error && (
         <Alert variant="destructive" className="mb-4">
@@ -186,9 +188,13 @@ const MyGroupsView = ({ onBackClick, accessToken, profile }) => {
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
-      {loading && <p className="mb-4">Carregant...</p>}
+      {loading && <p className="text-center text-muted-foreground">Carregant...</p>}
 
-      {renderViewByRole()}
+      <Card>
+        <CardContent className="p-6">
+            {renderViewByRole()}
+        </CardContent>
+      </Card>
     </div>
   );
 };
