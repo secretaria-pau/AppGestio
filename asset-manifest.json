@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/AppGestio/static/css/main.259a04fd.css",
-    "main.js": "/AppGestio/static/js/main.02fe7545.js",
-    "static/js/453.618a8f67.chunk.js": "/AppGestio/static/js/453.618a8f67.chunk.js",
+    "main.css": "/AppGestio/static/css/main.9abc6065.css",
+    "main.js": "/AppGestio/static/js/main.b4aeb1cb.js",
+    "static/js/453.f2e324f4.chunk.js": "/AppGestio/static/js/453.f2e324f4.chunk.js",
     "index.html": "/AppGestio/index.html",
-    "main.259a04fd.css.map": "/AppGestio/static/css/main.259a04fd.css.map",
-    "main.02fe7545.js.map": "/AppGestio/static/js/main.02fe7545.js.map",
-    "453.618a8f67.chunk.js.map": "/AppGestio/static/js/453.618a8f67.chunk.js.map"
+    "main.9abc6065.css.map": "/AppGestio/static/css/main.9abc6065.css.map",
+    "main.b4aeb1cb.js.map": "/AppGestio/static/js/main.b4aeb1cb.js.map",
+    "453.f2e324f4.chunk.js.map": "/AppGestio/static/js/453.f2e324f4.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.259a04fd.css",
-    "static/js/main.02fe7545.js"
+    "static/css/main.9abc6065.css",
+    "static/js/main.b4aeb1cb.js"
   ]
 }
