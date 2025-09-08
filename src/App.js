@@ -22,7 +22,8 @@ import AvisosView from './components/AvisosView';
 import ErrorBoundary from './components/ErrorBoundary';
 
 import { Card, CardContent, CardHeader, CardTitle, Button, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Alert, AlertDescription, AlertTitle, Tabs, TabsContent, TabsList, TabsTrigger, Dialog, DialogContent, DialogHeader, DialogTitle } from "./components/ui";
-import { Info, X } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./components/ui/tooltip";
+import { Info, X, ArrowLeft } from "lucide-react";
 
 
 // Helper function to format dates for display
@@ -349,247 +350,259 @@ function App() {
     const horaFiIndex = columnHeaders.indexOf('Hora Fi');
 
     return (
-      <div className="container mx-auto p-4">
-        {/* Top Bar with Title and Profile */}
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold">Incidències de personal</h2>
-          <div className="flex items-center">
-            {profile && (
-              <div className="text-right mr-3">
-                <div><strong>{profile.name}</strong> ({profile.role})</div>
-                <div><small>{profile.email}</small></div>
-              </div>
-            )}
-            <Button onClick={onBackClick} variant="outline">Tornar</Button>
-          </div>
-        </div>
-        
-        {error && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertTitle>Error</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
+      <TooltipProvider>
+        <div className="p-4 sm:p-6 lg:p-8">
+          <header className="flex justify-between items-center mb-6 pb-4 border-b">
+            <div className="flex items-center gap-4">
+              <Button onClick={onBackClick} className="bg-primary-light text-white">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Tornar
+              </Button>
+              <h1 className="text-2xl font-bold">Incidències de personal</h1>
+            </div>
+            <div className="text-right">
+              <div className="font-semibold">{profile.name} ({profile.role})</div>
+              <div className="text-xs text-muted-foreground">{profile.email}</div>
+            </div>
+          </header>
+          
+          {error && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
 
-        {profile && (
-          <Tabs defaultValue="list" value={currentView} onValueChange={setCurrentView} className="mb-4">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="list">Incidències de personal</TabsTrigger>
-              <TabsTrigger value="modified">Incidències modificades</TabsTrigger>
-              <TabsTrigger value="summary">Resum Anual</TabsTrigger>
-              <TabsTrigger value="documentation">Documentació</TabsTrigger>
-            </TabsList>
+          {profile && (
+            <Tabs defaultValue="list" value={currentView} onValueChange={setCurrentView} className="mt-4">
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="list">Incidències de personal</TabsTrigger>
+                <TabsTrigger value="modified">Incidències modificades</TabsTrigger>
+                <TabsTrigger value="summary">Resum Anual</TabsTrigger>
+                <TabsTrigger value="documentation">Documentació</TabsTrigger>
+              </TabsList>
 
-            <TabsContent value="list">
-              <h3 className="mt-4 text-xl font-semibold mb-3">Filtres</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                { (profile?.role === 'Gestor' || profile?.role === 'Direcció') ? (
-                  <div>
-                    <label htmlFor="filterUser" className="block text-sm font-medium text-gray-700 mb-1">Filtrar per Usuari</label>
-                    <Select value={filterUser} onValueChange={(value) => setFilterUser(value === 'all' ? '' : value)}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Tots els usuaris" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Tots els usuaris</SelectItem>
-                        {users.filter(user => user && user.email && user.email.trim() !== '').map(user => (
-                          <SelectItem key={user.email} value={user.email}>{user.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                ) : (
-                  <div>
-                    <label htmlFor="filterUser" className="block text-sm font-medium text-gray-700 mb-1">Les meves Incidències</label>
-                    <Input
-                      type="text"
-                      id="filterUser"
-                      value={profile.email}
-                      readOnly
-                    />
-                  </div>
-                )}
-                <div>
-                  <label htmlFor="filterYear" className="block text-sm font-medium text-gray-700 mb-1">Filtrar per Any</label>
-                  <Select value={filterYear} onValueChange={(value) => setFilterYear(value === 'all' ? '' : value)}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Tots els anys" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Tots els anys</SelectItem>
-                      {availableYears.filter(year => year && year.toString().trim() !== '').map(year => (
-                        <SelectItem key={year} value={year}>{year}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+              <TabsContent value="list">
+                <Card className="my-4">
+                  <CardHeader>
+                    <CardTitle>Filtres</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      { (profile?.role === 'Gestor' || profile?.role === 'Direcció') ? (
+                        <div>
+                          <label htmlFor="filterUser" className="block text-sm font-medium text-gray-700 mb-1">Filtrar per Usuari</label>
+                          <Select value={filterUser} onValueChange={(value) => setFilterUser(value === 'all' ? '' : value)}>
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Tots els usuaris" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">Tots els usuaris</SelectItem>
+                              {users.filter(user => user && user.email && user.email.trim() !== '').map(user => (
+                                <SelectItem key={user.email} value={user.email}>{user.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      ) : (
+                        <div>
+                          <label htmlFor="filterUser" className="block text-sm font-medium text-gray-700 mb-1">Les meves Incidències</label>
+                          <Input
+                            type="text"
+                            id="filterUser"
+                            value={profile.email}
+                            readOnly
+                          />
+                        </div>
+                      )}
+                      <div>
+                        <label htmlFor="filterYear" className="block text-sm font-medium text-gray-700 mb-1">Filtrar per Any</label>
+                        <Select value={filterYear} onValueChange={(value) => setFilterYear(value === 'all' ? '' : value)}>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Tots els anys" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Tots els anys</SelectItem>
+                            {availableYears.filter(year => year && year.toString().trim() !== '').map(year => (
+                              <SelectItem key={year} value={year}>{year}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <div className="flex justify-between items-center my-4">
+                  <h3 className="text-xl font-semibold">Llistat d'Incidències</h3>
+                  <Button
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                    onClick={() => setEditingIncident({ data: null, originalSheetRowIndex: null })}
+                  >
+                    Afegir Nova Incidència
+                  </Button>
                 </div>
-              </div>
 
-              <div className="flex justify-between items-center mb-3">
-                <h3 className="text-xl font-semibold">Incidències de personal</h3>
-                <Button
-                  className="bg-green-600 hover:bg-green-700 text-white"
-                  onClick={() => setEditingIncident({ data: null, originalSheetRowIndex: null })}
-                >
-                  Afegir Nova Incidència
-                </Button>
-              </div>
+                {incidents.length > 1 ? (
+                  <div className="grid grid-cols-1 gap-4">
+                    {incidents.slice(1).map((item, rowIndex) => {
+                      const isUserSigned = item.data[signaturaUsuariIndex] === 'TRUE';
+                      const isDirectorSigned = item.data[signaturaDireccioIndex] === 'TRUE';
+                      const canSign = isValidSignDate(item.data);
+                      const canUserSign = profile?.role === 'Usuari' && !isUserSigned && !isDirectorSigned && canSign;
+                      const canDirectorSign = profile?.role === 'Direcció' && !isDirectorSigned && canSign;
+                      const canEdit = !isDirectorSigned || (isDirectorSigned && profile.role === 'Direcció');
+                      const observacions = item.data[observacionsIndex];
 
-              {incidents.length > 1 ? (
-                <div className="grid grid-cols-1 gap-4">
-                  {incidents.slice(1).map((item, rowIndex) => {
-                    const isUserSigned = item.data[signaturaUsuariIndex] === 'TRUE';
-                    const isDirectorSigned = item.data[signaturaDireccioIndex] === 'TRUE';
-                    const canSign = isValidSignDate(item.data);
-                    const canUserSign = profile?.role === 'Usuari' && !isUserSigned && !isDirectorSigned && canSign;
-                    const canDirectorSign = profile?.role === 'Direcció' && !isDirectorSigned && canSign;
-                    const canEdit = !isDirectorSigned || (isDirectorSigned && profile.role === 'Direcció');
-                    const observacions = item.data[observacionsIndex];
-
-                    return (
-                      <Card key={rowIndex} className="shadow-sm rounded-lg cursor-pointer hover:shadow-md transition-shadow duration-200">
-                        <CardContent className="p-4">
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 text-sm">
-                            <div><strong>Usuari:</strong> {item.data[userEmailIndex]}</div>
-                            <div><strong>Tipus:</strong> {item.data[tipusIndex]}</div>
-                            <div><strong>Inici:</strong> {formatDateForDisplay(item.data[dataIniciIndex])} {item.data[horaIniciIndex]}</div>
-                            <div><strong>Fi:</strong> {formatDateForDisplay(item.data[dataFiIndex])} {item.data[horaFiIndex]}</div>
-                            <div><strong>Duració:</strong> {item.data[duracioIndex]}</div>
-                            <div className="flex items-center">
-                              <strong>Observacions:</strong> {observacions && (
-                                <span 
-                                  className="info-icon ml-1"
-                                  // onMouseEnter={(e) => handleMouseEnter(e, observacions)}
-                                  // onMouseLeave={handleMouseLeave}
+                      return (
+                        <Card key={rowIndex} className="shadow-sm rounded-lg hover:shadow-md transition-shadow duration-200">
+                          <CardContent className="p-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 text-sm">
+                              <div><strong>Usuari:</strong> {item.data[userEmailIndex]}</div>
+                              <div><strong>Tipus:</strong> {item.data[tipusIndex]}</div>
+                              <div><strong>Duració:</strong> {item.data[duracioIndex]}</div>
+                              <div><strong>Inici:</strong> {formatDateForDisplay(item.data[dataIniciIndex])} {item.data[horaIniciIndex]}</div>
+                              <div><strong>Fi:</strong> {formatDateForDisplay(item.data[dataFiIndex])} {item.data[horaFiIndex]}</div>
+                              <div className="flex items-center">
+                                <strong>Observacions:</strong> 
+                                {observacions && (
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <span className="info-icon ml-1 cursor-pointer">
+                                        <Info className="h-4 w-4 text-gray-500" />
+                                      </span>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>{observacions}</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                )}
+                              </div>
+                              <div>
+                                <strong>Signatura Usuari:</strong> <input type="checkbox" checked={isUserSigned} readOnly />
+                                {isUserSigned && <span className="block text-xs text-gray-500">{item.data[timestampSignaturaUsuariIndex]}</span>}
+                              </div>
+                              <div>
+                                <strong>Signatura Direcció:</strong> <input type="checkbox" checked={isDirectorSigned} readOnly />
+                                {isDirectorSigned && <span className="block text-xs text-gray-500">{item.data[timestampSignaturaDireccioIndex]}</span>}
+                              </div>
+                            </div>
+                            <div className="mt-4 flex flex-wrap gap-2">
+                              {canEdit && <Button
+                                size="sm"
+                                className="bg-[#288185] hover:bg-[#1e686b] text-white"
+                                onClick={() => handleEditClick(item.data, item.originalSheetRowIndex)}
+                              >
+                                Editar
+                              </Button>}
+                              {canUserSign && (
+                                <Button
+                                  size="sm"
+                                  className="bg-green-600 hover:bg-green-700 text-white"
+                                  onClick={() => handleSignClick(item.data, item.originalSheetRowIndex, 'user')}
                                 >
-                                  <Info className="h-4 w-4 text-gray-500" />
-                                </span>
+                                  Signar (Usuari)
+                                </Button>
+                              )}
+                              {canDirectorSign && (
+                                <Button
+                                  size="sm"
+                                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                                  onClick={() => handleSignClick(item.data, item.originalSheetRowIndex, 'director')}
+                                >
+                                  Signar (Direcció)
+                                </Button>
                               )}
                             </div>
-                            <div>
-                              <strong>Signatura Usuari:</strong> <input type="checkbox" checked={isUserSigned} readOnly />
-                              {isUserSigned && <span className="block text-xs text-gray-500">{item.data[timestampSignaturaUsuariIndex]}</span>}
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p>No hi ha incidències per mostrar.</p>
+                )}
+              </TabsContent>
+
+              <TabsContent value="summary">
+                <AnnualSummaryView incidents={incidents} profile={profile} />
+              </TabsContent>
+
+              <TabsContent value="modified">
+                <h3 className="text-xl font-semibold mb-3">Incidències modificades després de signar</h3>
+                {modifiedIncidents.length > 1 ? (
+                  <div className="grid grid-cols-1 gap-4">
+                    {modifiedIncidents.slice(1).map((item, rowIndex) => {
+                      const isUserSigned = item.data[signaturaUsuariIndex] === 'TRUE';
+                      const isDirectorSigned = item.data[signaturaDireccioIndex] === 'TRUE';
+
+                      return (
+                        <Card key={rowIndex} className="shadow-sm rounded-lg">
+                          <CardContent className="p-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 text-sm">
+                              <div><strong>Usuari:</strong> {item.data[userEmailIndex]}</div>
+                              <div><strong>Inici:</strong> {formatDateForDisplay(item.data[dataIniciIndex])} {item.data[horaIniciIndex]}</div>
+                              <div><strong>Fi:</strong> {formatDateForDisplay(item.data[dataFiIndex])} {item.data[horaFiIndex]}</div>
+                              <div><strong>Duració:</strong> {item.data[duracioIndex]}</div>
+                              <div><strong>Tipus:</strong> {item.data[tipusIndex]}</div>
+                              <div>
+                                <strong>Signatura Usuari:</strong> <input type="checkbox" checked={isUserSigned} readOnly />
+                                {isUserSigned && <span className="block text-xs text-gray-500">{item.data[timestampSignaturaUsuariIndex]}</span>}
+                              </div>
+                              <div>
+                                <strong>Signatura Direcció:</strong> <input type="checkbox" checked={isDirectorSigned} readOnly />
+                                {isDirectorSigned && <span className="block text-xs text-gray-500">{item.data[timestampSignaturaDireccioIndex]}</span>}
+                              </div>
+                              <div>
+                                <strong>Esborrat:</strong> <input type="checkbox" checked={item.data[esborratIndex] === 'TRUE'} readOnly />
+                              </div>
                             </div>
-                            <div>
-                              <strong>Signatura Direcció:</strong> <input type="checkbox" checked={isDirectorSigned} readOnly />
-                              {isDirectorSigned && <span className="block text-xs text-gray-500">{item.data[timestampSignaturaDireccioIndex]}</span>}
-                            </div>
-                          </div>
-                          <div className="mt-4 flex flex-wrap gap-2">
-                            {canEdit && <Button
-                              size="sm"
-                              className="bg-[#288185] hover:bg-[#1e686b] text-white"
-                              onClick={() => handleEditClick(item.data, item.originalSheetRowIndex)}
-                            >
-                              Editar
-                            </Button>}
-                            {canUserSign && (
-                              <Button
-                                size="sm"
-                                className="bg-green-600 hover:bg-green-700 text-white"
-                                onClick={() => handleSignClick(item.data, item.originalSheetRowIndex, 'user')}
-                              >
-                                Signar (Usuari)
-                              </Button>
-                            )}
-                            {canDirectorSign && (
-                              <Button
-                                size="sm"
-                                className="bg-blue-600 hover:bg-blue-700 text-white"
-                                onClick={() => handleSignClick(item.data, item.originalSheetRowIndex, 'director')}
-                              >
-                                Signar (Direcció)
-                              </Button>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
-              ) : (
-                <p>No hi ha incidències per mostrar.</p>
-              )}
-            </TabsContent>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p>No hi ha incidències modificades per mostrar.</p>
+                )}
+              </TabsContent>
 
-            <TabsContent value="summary">
-              <AnnualSummaryView incidents={incidents} profile={profile} />
-            </TabsContent>
+              <TabsContent value="documentation">
+                <DocumentationView accessToken={accessToken} />
+              </TabsContent>
+            </Tabs>
+          )}
 
-            <TabsContent value="modified">
-              <h3 className="text-xl font-semibold mb-3">Incidències modificades després de signar</h3>
-              {modifiedIncidents.length > 1 ? (
-                <div className="grid grid-cols-1 gap-4">
-                  {modifiedIncidents.slice(1).map((item, rowIndex) => {
-                    const isUserSigned = item.data[signaturaUsuariIndex] === 'TRUE';
-                    const isDirectorSigned = item.data[signaturaDireccioIndex] === 'TRUE';
+          {editingIncident !== null && (
+            <Dialog open={editingIncident !== null} onOpenChange={handleCloseForm}>
+              <DialogContent className="sm:max-w-[600px]">
+                <DialogHeader>
+                  <DialogTitle>{editingIncident.data ? 'Editar Incidència' : 'Afegir Nova Incidència'}</DialogTitle>
+                </DialogHeader>
+                <AddIncidentForm
+                  incidentToEdit={editingIncident.data}
+                  originalSheetRowIndex={editingIncident.originalSheetRowIndex}
+                  onSaveIncident={handleSaveIncident}
+                  onClose={handleCloseForm}
+                  setError={setError}
+                  profile={profile}
+                  users={users}
+                  incidentTypes={incidentTypes}
+                />
+              </DialogContent>
+            </Dialog>
+          )}
 
-                    return (
-                      <Card key={rowIndex} className="shadow-sm rounded-lg">
-                        <CardContent className="p-4">
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 text-sm">
-                            <div><strong>Usuari:</strong> {item.data[userEmailIndex]}</div>
-                            <div><strong>Inici:</strong> {formatDateForDisplay(item.data[dataIniciIndex])} {item.data[horaIniciIndex]}</div>
-                            <div><strong>Fi:</strong> {formatDateForDisplay(item.data[dataFiIndex])} {item.data[horaFiIndex]}</div>
-                            <div><strong>Duració:</strong> {item.data[duracioIndex]}</div>
-                            <div><strong>Tipus:</strong> {item.data[tipusIndex]}</div>
-                            <div>
-                              <strong>Signatura Usuari:</strong> <input type="checkbox" checked={isUserSigned} readOnly />
-                              {isUserSigned && <span className="block text-xs text-gray-500">{item.data[timestampSignaturaUsuariIndex]}</span>}
-                            </div>
-                            <div>
-                              <strong>Signatura Direcció:</strong> <input type="checkbox" checked={isDirectorSigned} readOnly />
-                              {isDirectorSigned && <span className="block text-xs text-gray-500">{item.data[timestampSignaturaDireccioIndex]}</span>}
-                            </div>
-                            <div>
-                              <strong>Esborrat:</strong> <input type="checkbox" checked={item.data[esborratIndex] === 'TRUE'} readOnly />
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
-              ) : (
-                <p>No hi ha incidències modificades per mostrar.</p>
-              )}
-            </TabsContent>
+          <SignatureConfirmPopup
+            isOpen={isSignaturePopupOpen}
+            onConfirm={handleConfirmSignature}
+            onCancel={handleCancelSignature}
+            message={`Esteu segur que voleu signar aquesta incidència com a ${signatureType === 'user' ? 'Usuari' : 'Direcció'}?`}
+          />
 
-            <TabsContent value="documentation">
-              <DocumentationView accessToken={accessToken} />
-            </TabsContent>
-          </Tabs>
-        )}
-
-        {editingIncident !== null && (
-          <Dialog open={editingIncident !== null} onOpenChange={handleCloseForm}>
-            <DialogContent className="sm:max-w-[600px]">
-              <DialogHeader>
-                <DialogTitle>{editingIncident.data ? 'Editar Incidència' : 'Afegir Nova Incidència'}</DialogTitle>
-              </DialogHeader>
-              <AddIncidentForm
-                incidentToEdit={editingIncident.data}
-                originalSheetRowIndex={editingIncident.originalSheetRowIndex}
-                onSaveIncident={handleSaveIncident}
-                onClose={handleCloseForm}
-                setError={setError}
-                profile={profile}
-                users={users}
-                incidentTypes={incidentTypes}
-              />
-            </DialogContent>
-          </Dialog>
-        )}
-
-        <SignatureConfirmPopup
-          isOpen={isSignaturePopupOpen}
-          onConfirm={handleConfirmSignature}
-          onCancel={handleCancelSignature}
-          message={`Esteu segur que voleu signar aquesta incidència com a ${signatureType === 'user' ? 'Usuari' : 'Direcció'}?`}
-        />
-
-        
-      </div>
+          
+        </div>
+      </TooltipProvider>
     );
   }
 

@@ -1,7 +1,15 @@
-export const getEvents = async (calendarId, accessToken) => {
+export const getEvents = async (calendarId, accessToken, timeMin, timeMax) => {
   try {
-    const response = await fetch(`https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events?timeMin=${(new Date()).toISOString()}`,
-     {
+    let url = `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events`;
+
+    const params = new URLSearchParams();
+    if (timeMin) params.append('timeMin', timeMin);
+    if (timeMax) params.append('timeMax', timeMax);
+    // You can add other parameters like singleEvents=true if needed
+    params.append('singleEvents', 'true');
+    params.append('orderBy', 'startTime');
+
+    const response = await fetch(`${url}?${params.toString()}`, {
       headers: {
         'Authorization': `Bearer ${accessToken}`,
       },

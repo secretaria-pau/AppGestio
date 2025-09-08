@@ -22,7 +22,7 @@ const messages = {
   showMore: total => `+ Veure'n més (${total})`
 };
 
-const CalendarDisplay = ({ events, view, date, onView, onNavigate, onSelectEvent, eventPropGetter }) => {
+const CalendarDisplay = ({ events, view, date, onView, onNavigate, onSelectEvent, eventPropGetter, min, max }) => {
   return (
     <div className="h-[70vh]">
       <Calendar
@@ -38,6 +38,8 @@ const CalendarDisplay = ({ events, view, date, onView, onNavigate, onSelectEvent
         onSelectEvent={onSelectEvent}
         messages={messages}
         eventPropGetter={eventPropGetter}
+        min={min}
+        max={max}
       />
     </div>
   );

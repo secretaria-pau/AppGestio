@@ -7,8 +7,9 @@ import { getEvents, deleteEvent, updateEvent } from '../../googleCalendarService
 import { fetchSheetData } from '../../googleSheetsService'; // To get incidents
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 
-import { Button, Alert, AlertDescription, AlertTitle, Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "../ui";
-import { X } from "lucide-react";
+import { Button, Alert, AlertDescription, AlertTitle, Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, Card, CardContent, CardHeader, CardTitle } from "../ui";
+import { X, ArrowLeft } from "lucide-react";
+import moment from 'moment';
 
 const CALENDARS = {
   laPau: {
@@ -157,6 +158,12 @@ function CalendarMainView({ onBackClick, accessToken, profile }) {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  const minTime = new Date();
+  minTime.setHours(8, 0, 0);
+
+  const maxTime = new Date();
+  maxTime.setHours(22, 0, 0);
+
   const handleRefreshEvents = () => {
     fetchCalendarData();
   };
@@ -197,10 +204,17 @@ function CalendarMainView({ onBackClick, accessToken, profile }) {
     try {
       let fetchedEvents = [];
       if (activeCalendar === CALENDARS.incidents.id) {
+        // Incidents are fetched all at once, not by date range
         const incidentData = await fetchSheetData('Incidències!A:N', accessToken);
         fetchedEvents = transformIncidentsToEvents(incidentData, profile);
       } else {
-        fetchedEvents = await getEvents(activeCalendar, accessToken);
+        const momentDate = moment(calendarDate);
+        // For month, week, day views, get the start and end of the period
+        const view = currentView === 'agenda' ? 'month' : currentView; // Treat agenda like month for range
+        const timeMin = momentDate.clone().startOf(view).toISOString();
+        const timeMax = momentDate.clone().endOf(view).toISOString();
+
+        fetchedEvents = await getEvents(activeCalendar, accessToken, timeMin, timeMax);
       }
       setEvents(fetchedEvents);
     } catch (err) {
@@ -213,7 +227,7 @@ function CalendarMainView({ onBackClick, accessToken, profile }) {
 
   useEffect(() => {
     fetchCalendarData();
-  }, [activeCalendar, accessToken, profile]);
+  }, [activeCalendar, accessToken, profile, calendarDate, currentView]);
 
   const eventPropGetter = (view) => (event, start, end, isSelected) => {
     let backgroundColor = '';
@@ -237,36 +251,44 @@ function CalendarMainView({ onBackClick, accessToken, profile }) {
   const activeCalendarName = Object.values(CALENDARS).find(c => c.id === activeCalendar)?.name || '';
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">Calendaris del centre</h2>
-        <div className="flex items-center">
-          {profile && (
-            <div className="text-right mr-3">
-              <div><strong>{profile.name}</strong> ({profile.role})</div>
-              <div><small>{profile.email}</small></div>
-            </div>
-          )}
-          <Button onClick={onBackClick} variant="outline">Tornar</Button>
+    <div className="p-4 sm:p-6 lg:p-8">
+      <header className="flex justify-between items-center mb-6 pb-4 border-b">
+        <div className="flex items-center gap-4">
+          <Button onClick={onBackClick} className="bg-primary-light text-white">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Tornar
+          </Button>
+          <h1 className="text-2xl font-bold">Calendaris del centre</h1>
         </div>
-      </div>
-
-      <CalendarToolbar 
-        calendars={CALENDARS}
-        activeCalendar={activeCalendar}
-        setActiveCalendar={setActiveCalendar}
-        currentView={currentView}
-        setCurrentView={setCurrentView}
-        profile={profile}
-        onAddEventClick={handleOpenCreateForm}
-      />
+        <div className="text-right">
+          <div className="font-semibold">{profile.name} ({profile.role})</div>
+          <div className="text-xs text-muted-foreground">{profile.email}</div>
+        </div>
+      </header>
 
       {error && (
-        <Alert variant="destructive" className="mt-3">
+        <Alert variant="destructive" className="my-4">
           <AlertTitle>Error</AlertTitle>
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
+
+      <Card className="my-4">
+        <CardHeader>
+          <CardTitle>Controls del Calendari</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <CalendarToolbar 
+            calendars={CALENDARS}
+            activeCalendar={activeCalendar}
+            setActiveCalendar={setActiveCalendar}
+            currentView={currentView}
+            setCurrentView={setCurrentView}
+            profile={profile}
+            onAddEventClick={handleOpenCreateForm}
+          />
+        </CardContent>
+      </Card>
 
       <EventForm 
         isOpen={isFormOpen}
@@ -324,18 +346,25 @@ function CalendarMainView({ onBackClick, accessToken, profile }) {
       {loading ? (
         <p className="text-center mt-3">Cargando esdeveniments...</p>
       ) : (
-        <CalendarDisplay 
-          events={events} 
-          view={currentView} 
-          date={calendarDate}
-          onView={setCurrentView}
-          onNavigate={setCalendarDate}
-          onSelectEvent={handleSelectEvent}
-          eventPropGetter={eventPropGetter(currentView)}
-        />
+        <Card>
+          <CardContent className="p-2">
+            <CalendarDisplay 
+              events={events} 
+              view={currentView} 
+              date={calendarDate}
+              onView={setCurrentView}
+              onNavigate={setCalendarDate}
+              onSelectEvent={handleSelectEvent}
+              eventPropGetter={eventPropGetter(currentView)}
+              min={minTime}
+              max={maxTime}
+            />
+          </CardContent>
+        </Card>
       )}
     </div>
   );
 }
+
 
 export default CalendarMainView;
