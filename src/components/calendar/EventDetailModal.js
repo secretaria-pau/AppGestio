@@ -37,9 +37,6 @@ const EventDetailModal = ({ event, onClose, calendarName, profile, onDelete, onE
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription className="text-muted-foreground">Calendari: {calendarName}</DialogDescription>
-          <Button variant="ghost" size="icon" onClick={onClose} className="absolute right-4 top-4">
-            <X className="h-4 w-4" />
-          </Button>
         </DialogHeader>
         <div className="p-4">
           <p className="mb-1"><strong>Inici:</strong> {formatDateTime(start, allDay)}</p>

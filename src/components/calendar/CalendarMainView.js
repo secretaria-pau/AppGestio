@@ -314,9 +314,6 @@ function CalendarMainView({ onBackClick, accessToken, profile }) {
           <DialogContent className="sm:max-w-[600px]">
             <DialogHeader>
               <DialogTitle>Detall de la Incidència</DialogTitle>
-              <Button variant="ghost" size="icon" onClick={() => setSelectedIncident(null)} className="absolute right-4 top-4">
-                <X className="h-4 w-4" />
-              </Button>
             </DialogHeader>
             <div className="p-4">
               <h4 className="text-lg font-semibold mb-2">{selectedIncident.title}</h4>
