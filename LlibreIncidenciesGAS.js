@@ -15,6 +15,11 @@ const STUDENTS_SHEET_NAME = 'Alumnes';
 const TEACHERS_SHEET_NAME = 'Professors';
 const MENU_NAME = 'Sincro Alumnes';
 
+// --- Celda para señal de sincronización asíncrona ---
+// Usamos una celda fuera del rango de datos normales, por ejemplo, Z1000
+const SIGNAL_CELL = 'Configuració!Z1000'; 
+const RESULT_CELL = 'Configuració!Z1001';
+
 // --- FUNCIONS DEL MENÚ ---
 
 function onOpen() {
@@ -171,6 +176,9 @@ function actualitzarProfessors() {
 }
 
 function sincronitzarMembres() {
+  Logger.log("Iniciant sincronització de membres...");
+  const startTime = new Date();
+  
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const configSheet = ss.getSheetByName(CONFIG_SHEET_NAME);
   const studentsSheet = ss.getSheetByName(STUDENTS_SHEET_NAME);
@@ -189,15 +197,22 @@ function sincronitzarMembres() {
     throw new Error('No hi ha cap curs marcat com "Actiu" per sincronitzar.');
   }
 
+  let coursesProcessed = 0;
+  const totalCourses = activeCourses.length;
+  let errors = [];
+  
   for (const item of activeCourses) {
     const rowData = item.data;
     const rowIndex = item.rowIndex;
     const [isActive, courseName, groupName, chatName] = rowData;
     const courseId = String(rowData[5]);
     const statusCell = configSheet.getRange(rowIndex, 5);
+    
+    coursesProcessed++;
+    Logger.log(`Processant curs ${coursesProcessed}/${totalCourses}: ${courseName}`);
 
     try {
-      statusCell.setValue('Sincronitzant...');
+      statusCell.setValue(`Sincronitzant (${coursesProcessed}/${totalCourses})...`);
       SpreadsheetApp.flush();
 
       const cleanCourseName = courseName.replace('DEL - ', ''); 
@@ -212,17 +227,34 @@ function sincronitzarMembres() {
 
       let summary = [];
       if (groupName) {
-        summary.push(`Grup: ${_syncGroup(groupName, targetStudents, targetTeachers, PROTECTED_USER_EMAIL)}`);
+        Logger.log(`  Sincronitzant grup: ${groupName}`);
+        const groupResult = _syncGroup(groupName, targetStudents, targetTeachers, PROTECTED_USER_EMAIL);
+        summary.push(`Grup: ${groupResult}`);
+        Logger.log(`  Resultat grup: ${groupResult}`);
       }
       if (chatName) {
-        summary.push(`Chat: ${_syncChat(chatName, targetStudents, targetTeachers, PROTECTED_USER_EMAIL)}`);
+        Logger.log(`  Sincronitzant chat: ${chatName}`);
+        const chatResult = _syncChat(chatName, targetStudents, targetTeachers, PROTECTED_USER_EMAIL);
+        summary.push(`Chat: ${chatResult}`);
+        Logger.log(`  Resultat chat: ${chatResult}`);
       }
 
       statusCell.setValue(`Sincronitzat: ${new Date().toLocaleString()}. ${summary.join(' | ')}`);
     } catch (e) {
+      const errorMsg = `Error durant la sincronització del curs ${courseName}: ${e.message}`;
+      Logger.log(errorMsg);
+      errors.push(errorMsg);
       statusCell.setValue(`Error: ${e.message}`);
-      throw new Error(`Error during member sync for course ${courseName}: ${e.message}`);
+      // No lanzamos el error, continuamos con los siguientes cursos
     }
+  }
+  
+  const endTime = new Date();
+  const duration = (endTime - startTime) / 1000; // Duración en segundos
+  Logger.log(`Sincronització de membres finalitzada. Cursos processats: ${coursesProcessed}, Errors: ${errors.length}, Temps total: ${duration} segons.`);
+  
+  if (errors.length > 0) {
+      throw new Error(`Hi va haver errors en ${errors.length} cursos. Revisa els logs per a més detalls. Cursos amb error: ${errors.map(e => e.split(':')[2].trim()).join(', ')}`);
   }
 }
 
@@ -748,6 +780,12 @@ function doGet(e) {
         sincronitzarMembres();
         result = { success: true, message: 'Sincronització de membres i rols finalitzada.' };
         break;
+      case 'iniciarSincronitzacioMembresAsync':
+        // Deixar una senyal perquè el trigger executi la sincronització
+        const ss = SpreadsheetApp.getActiveSpreadsheet();
+        ss.getRange(SIGNAL_CELL).setValue('START_SYNC_MEMBERS_' + new Date().toISOString());
+        result = { success: true, message: 'Sincronització iniciada. Revisa l\'estat en uns minuts.' };
+        break;
       case 'createStudentsSheet':
                   // console.log(`[GAS doGet] Received newOwnerEmail: ${e.parameter.newOwnerEmail}`); // AÑADE ESTA LÍNEA
                     result = createStudentsSheet(e.parameter.courseName, JSON.parse(e.parameter.studentsData), e.parameter.groupName, JSON.parse(e.parameter.teacherNames), e.parameter.newOwnerEmail);
@@ -763,5 +801,37 @@ function doGet(e) {
     .setMimeType(ContentService.MimeType.JAVASCRIPT);
 
   return jsonpOutput;
+}
+
+/**
+ * Funció per a ser cridada per un trigger.
+ * Comprova si hi ha una senyal per iniciar la sincronització de membres.
+ * Si la troba, executa la sincronització i escriu el resultat.
+ */
+function comprovaISincronitzaMembres() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const signalCell = ss.getRange(SIGNAL_CELL);
+  const resultCell = ss.getRange(RESULT_CELL);
+  const signalValue = signalCell.getValue();
+  
+  if (signalValue && signalValue.toString().startsWith('START_SYNC_MEMBERS_')) {
+    Logger.log('Senyal de sincronització trobada. Iniciant procés...');
+    signalCell.clearContent(); // Netejar la senyal
+    
+    const startTime = new Date();
+    try {
+      sincronitzarMembres();
+      const endTime = new Date();
+      const duration = ((endTime - startTime) / 1000).toFixed(2);
+      const successMessage = `Sincronització completada correctament a ${endTime.toLocaleString()} (Temps: ${duration}s).`;
+      resultCell.setValue(successMessage);
+      Logger.log(successMessage);
+    } catch (error) {
+      const endTime = new Date();
+      const errorMessage = `Error en la sincronització: ${error.message} a ${endTime.toLocaleString()}.`;
+      resultCell.setValue(errorMessage);
+      Logger.log(errorMessage);
+    }
+  }
 }
 

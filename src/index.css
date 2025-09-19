@@ -68,6 +68,44 @@
   }
 }
 
+@layer components {
+  /* Clase personalizada para alinear el texto del SelectTrigger a la izquierda */
+  .select-trigger-text-left {
+    text-align: left !important;
+  }
+  
+  /* Clase personalizada para reducir el padding izquierdo del SelectTrigger */
+  .select-trigger-no-padding {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+  }
+  
+  /* Clase para dar suficiente padding izquierdo a los SelectItem para evitar superposición con el check */
+  .select-item-no-padding {
+    padding-left: 2rem !important; /* Aumentamos el padding para dejar espacio para el check */
+    padding-right: 0.5rem !important;
+  }
+  
+  /* Clases mejoradas para evitar el corte de texto */
+  .select-trigger-no-line-clamp {
+    --tw-line-clamp: unset !important;
+  }
+  
+  .select-trigger-no-line-clamp > span {
+    overflow: visible !important;
+    text-overflow: unset !important;
+    white-space: normal !important;
+    display: block !important;
+  }
+  
+  .select-value-no-truncate > span {
+    overflow: visible !important;
+    text-overflow: unset !important;
+    white-space: normal !important;
+    display: block !important;
+  }
+}
+
 @layer base {
   * {
     @apply border-border;

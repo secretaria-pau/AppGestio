@@ -13,7 +13,7 @@ const handleGoogleApiError = async (response) => {
 export const getUserProfile = async (email, accessToken) => {
   try {
     const range = 'Usuaris!A:C';
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}?key=${API_KEY}`;
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}`;
 
     const response = await fetch(url, {
       headers: {
@@ -58,7 +58,7 @@ export const getUserProfile = async (email, accessToken) => {
 
 export const fetchSheetData = async (range, accessToken) => {
   try {
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}?key=${API_KEY}`;
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}`;
     const response = await fetch(url, {
       headers: {
         'Authorization': `Bearer ${accessToken}`,
@@ -75,7 +75,7 @@ export const fetchSheetData = async (range, accessToken) => {
 
 export const appendSheetData = async (range, values, accessToken) => {
   try {
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}:append?valueInputOption=USER_ENTERED&key=${API_KEY}`;
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}:append?valueInputOption=USER_ENTERED`;
     const response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -94,7 +94,7 @@ export const appendSheetData = async (range, values, accessToken) => {
 
 export const updateSheetData = async (range, values, accessToken) => {
   try {
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}?valueInputOption=RAW&key=${API_KEY}`;
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}?valueInputOption=RAW`;
     const response = await fetch(url, {
       method: 'PUT',
       headers: {
@@ -114,7 +114,7 @@ export const updateSheetData = async (range, values, accessToken) => {
 export const getUsers = async (accessToken) => {
   try {
     const range = 'Usuaris!A:C'; // Fetch Nom, Email, and Rol
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}?key=${API_KEY}`;
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}`;
     const response = await fetch(url, {
       headers: { 'Authorization': `Bearer ${accessToken}` },
     });
@@ -135,9 +135,9 @@ export const getUsers = async (accessToken) => {
     }
 
     const users = rows.slice(1).map(row => ({
-      name: row[nameColIndex] || '',
-      email: row[emailColIndex] || '',
-      role: row[roleColIndex] || 'Usuari', // Default role
+      name: row[nameColIndex] ? row[nameColIndex].trim() : '',
+      email: row[emailColIndex] ? row[emailColIndex].trim() : '',
+      role: row[roleColIndex] ? row[roleColIndex].trim() : 'Usuari', // Default role
     }));
 
     // Sort users by role (e.g., Direcció, Gestor, Usuari)
@@ -154,7 +154,7 @@ export const getUsers = async (accessToken) => {
 export const getIncidentTypes = async (accessToken) => {
   try {
     const range = 'Tipus!A:C'; // Fetch Type, Duration Unit (H/D), and Description
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}?key=${API_KEY}`;
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}`;
     const response = await fetch(url, {
       headers: { 'Authorization': `Bearer ${accessToken}` },
     });

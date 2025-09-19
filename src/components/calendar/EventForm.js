@@ -212,16 +212,47 @@ const EventForm = ({ isOpen, onClose, accessToken, calendarId, calendarName, onE
           {!isLaPauCalendar && (
             <div className="mb-3">
               <label htmlFor="guests" className="block text-sm font-medium text-gray-700 mb-1">Convidats</label>
-              <Select
-                id="guests"
-                isMulti
-                options={allUsers}
-                value={invitedGuests}
-                onChange={setInvitedGuests}
-                placeholder="Selecciona convidats..."
-                className="basic-multi-select"
-                classNamePrefix="select"
-              />
+              <div className="border rounded-md p-2 min-h-[40px]">
+                {invitedGuests.length > 0 ? (
+                  <div className="flex flex-wrap gap-1">
+                    {invitedGuests.map(guest => (
+                      <span key={guest.value} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        {guest.label}
+                        <button
+                          type="button"
+                          className="ml-1 inline-flex items-center rounded-full bg-blue-200 text-blue-800 hover:bg-blue-300 focus:outline-none"
+                          onClick={() => setInvitedGuests(invitedGuests.filter(g => g.value !== guest.value))}
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <span className="text-gray-500 text-sm">Selecciona convidats...</span>
+                )}
+                <div className="mt-2">
+                  <ShadcnSelect onValueChange={(value) => {
+                    const user = allUsers.find(u => u.value === value);
+                    if (user && !invitedGuests.some(g => g.value === user.value)) {
+                      setInvitedGuests([...invitedGuests, user]);
+                    }
+                  }}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Afegeix un convidat..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {allUsers
+                        .filter(user => !invitedGuests.some(g => g.value === user.value))
+                        .map(user => (
+                          <SelectItem key={user.value} value={user.value}>
+                            {user.label}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </ShadcnSelect>
+                </div>
+              </div>
             </div>
           )}
           

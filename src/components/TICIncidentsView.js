@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { getTICIncidents, addTICIncident, updateTICIncident, exportTICPendingIncidents } from '../googleServices';
 import { Button } from './ui/button';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter, CardDescription } from './ui/card';
@@ -24,7 +24,7 @@ const TICIncidentsView = ({ onBackClick, profile, accessToken, users }) => {
     fetchIncidents();
   }, []);
 
-  const fetchIncidents = async () => {
+  const fetchIncidents = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -40,16 +40,15 @@ const TICIncidentsView = ({ onBackClick, profile, accessToken, users }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [accessToken]);
 
-  useEffect(() => {
+  const filteredIncidentsMemo = useMemo(() => {
     const lowercasedFilter = searchTerm.toLowerCase();
-    const filteredData = incidents.filter(item => 
+    return incidents.filter(item => 
       Object.values(item).some(val => 
         String(val).toLowerCase().includes(lowercasedFilter)
       )
     );
-    setFilteredIncidents(filteredData);
   }, [searchTerm, incidents]);
 
   const handleAddNewIncident = () => {
@@ -258,7 +257,7 @@ const TICIncidentsView = ({ onBackClick, profile, accessToken, users }) => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredIncidents.length === 0 ? (
+                {filteredIncidentsMemo.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
                       No s'han trobat incidències.
@@ -266,37 +265,43 @@ const TICIncidentsView = ({ onBackClick, profile, accessToken, users }) => {
                   </TableRow>
                 ) : (
                   // Sort incidents by status order
-                  filteredIncidents.sort((a, b) => statuses.indexOf(a.Estat) - statuses.indexOf(b.Estat)).map((incident, index, array) => {
-                    const showStatusHeader = index === 0 || incident.Estat !== array[index - 1].Estat;
-                    return (
-                      <React.Fragment key={incident.ID}>
-                        {showStatusHeader && (
-                          <TableRow className={`bg-muted/30 ${getStatusColor(incident.Estat)}`}>
-                            <TableCell colSpan={9} className="font-semibold text-lg py-2">
-                              {incident.Estat}
+                  (() => {
+                    const sortedIncidents = [...filteredIncidentsMemo].sort((a, b) => 
+                      statuses.indexOf(a.Estat) - statuses.indexOf(b.Estat)
+                    );
+                    
+                    return sortedIncidents.map((incident, index, array) => {
+                      const showStatusHeader = index === 0 || incident.Estat !== array[index - 1].Estat;
+                      return (
+                        <React.Fragment key={incident.ID}>
+                          {showStatusHeader && (
+                            <TableRow className={`bg-muted/30 ${getStatusColor(incident.Estat)}`}>
+                              <TableCell colSpan={9} className="font-semibold text-lg py-2">
+                                {incident.Estat}
+                              </TableCell>
+                            </TableRow>
+                          )}
+                          <TableRow className="hover:bg-muted/50 data-[state=selected]:bg-muted">
+                            
+                            <TableCell>{incident["Qui fa la incidencia?"]}</TableCell>
+                            <TableCell>{incident.Tipus}</TableCell>
+                            <TableCell>{incident.Espai}</TableCell>
+                            <TableCell>{incident["Dispositiu afectat"]}</TableCell>
+                            <TableCell>{new Date(incident["Data de comunicació"]).toLocaleDateString('ca-ES')}</TableCell>
+                            <TableCell>{new Date(incident["Data de la darrera edició"]).toLocaleDateString('ca-ES')}</TableCell>
+                            <TableCell className="w-[400px]">{incident.Descripció}</TableCell>
+                            <TableCell className="text-right">
+                              {(profile.role === 'Gestor' || profile.role === 'Direcció') && (
+                                <Button variant="ghost" size="icon" onClick={() => handleEditIncident(incident)}>
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                              )}
                             </TableCell>
                           </TableRow>
-                        )}
-                        <TableRow className="hover:bg-muted/50 data-[state=selected]:bg-muted">
-                          
-                          <TableCell>{incident["Qui fa la incidencia?"]}</TableCell>
-                          <TableCell>{incident.Tipus}</TableCell>
-                          <TableCell>{incident.Espai}</TableCell>
-                          <TableCell>{incident["Dispositiu afectat"]}</TableCell>
-                          <TableCell>{new Date(incident["Data de comunicació"]).toLocaleDateString('ca-ES')}</TableCell>
-                          <TableCell>{new Date(incident["Data de la darrera edició"]).toLocaleDateString('ca-ES')}</TableCell>
-                          <TableCell className="w-[400px]">{incident.Descripció}</TableCell>
-                          <TableCell className="text-right">
-                            {(profile.role === 'Gestor' || profile.role === 'Direcció') && (
-                              <Button variant="ghost" size="icon" onClick={() => handleEditIncident(incident)}>
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      </React.Fragment>
-                    );
-                  })
+                        </React.Fragment>
+                      );
+                    });
+                  })()
                 )}
               </TableBody>
             </Table>

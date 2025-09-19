@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { GoogleOAuthProvider, useGoogleLogin } from '@react-oauth/google';
 import { 
   fetchSheetData, 
@@ -20,6 +20,7 @@ import TICIncidentsView from './components/TICIncidentsView';
 import MantenimentView from './components/MantenimentView';
 import AvisosView from './components/AvisosView';
 import ErrorBoundary from './components/ErrorBoundary';
+import SeguimentCSIView from './components/SeguimentCSIView';
 
 import { Card, CardContent, CardHeader, CardTitle, Button, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Alert, AlertDescription, AlertTitle, Tabs, TabsContent, TabsList, TabsTrigger, Dialog, DialogContent, DialogHeader, DialogTitle } from "./components/ui";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./components/ui/tooltip";
@@ -53,13 +54,49 @@ function App() {
   const [incidentToSign, setIncidentToSign] = useState(null);
   const [signatureType, setSignatureType] = useState('');
   const [currentView, setCurrentView] = useState('list');
-  const [accessToken, setAccessToken] = useState(() => localStorage.getItem('googleAccessToken'));
+  const [accessToken, setAccessToken] = useState(null); // Start with null, don't load from localStorage immediately
+  const [isAuthenticatedSession, setIsAuthenticatedSession] = useState(false); // New state to track if login process was completed in this session
 
+  // On initial load, check if we have a stored token and validate it
   useEffect(() => {
-    if (accessToken) {
-      setCurrentScreen('home');
+    const storedToken = localStorage.getItem('googleAccessToken');
+    if (storedToken) {
+      // Attempt to validate the token by fetching user info
+      const validateToken = async () => {
+        try {
+          const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+            headers: { 'Authorization': `Bearer ${storedToken}` },
+          });
+          if (response.ok) {
+            // Token seems valid, set it and proceed to check user profile
+            setAccessToken(storedToken);
+            setIsAuthenticatedSession(true); // Mark session as authenticated
+            const googleProfile = await response.json();
+            
+            // Now check if the user is in our sheets database
+            const userProfile = await getUserProfile(googleProfile.email, storedToken);
+            if (userProfile) {
+              setProfile(userProfile);
+              setCurrentScreen('home');
+            } else {
+              // Valid Google token, but not authorized user
+              setError("Accés no autoritzat. El vostre correu electrònic no es troba a la llista d'usuaris permesos.");
+              setAccessToken(null);
+              localStorage.removeItem('googleAccessToken');
+            }
+          } else {
+            // Token is invalid/expired
+            localStorage.removeItem('googleAccessToken');
+          }
+        } catch (err) {
+          console.error("Error validating stored access token:", err);
+          // If validation fails, remove the stored token
+          localStorage.removeItem('googleAccessToken');
+        }
+      };
+      validateToken();
     }
-  }, [accessToken]);
+  }, []); // Run only once on component mount
 
   const handleSignClick = (incidentData, originalSheetRowIndex, type) => {
     if (!isValidSignDate(incidentData)) {
@@ -144,6 +181,7 @@ function App() {
   };
 
   const handleEditClick = (incidentData, originalSheetRowIndex) => {
+    console.log("App.js: handleEditClick called with:", { incidentData, originalSheetRowIndex });
     setEditingIncident({ data: incidentData, originalSheetRowIndex: originalSheetRowIndex });
   };
 
@@ -190,7 +228,7 @@ function App() {
   };
 
   // Initial data fetch
-  const fetchIncidents = async () => {
+  const fetchIncidents = useCallback(async () => {
     if (!accessToken) return;
     try {
       const data = await fetchSheetData('Incidències!A:N', accessToken);
@@ -199,37 +237,34 @@ function App() {
       console.error("Error fetching incidents:", err);
       setError("Error en carregar les incidències. Verifiqueu la configuració y els permisos.");
     }
-  };
+  }, [accessToken]);
 
   useEffect(() => {
-    if (currentScreen === 'incidents' || currentScreen === 'tic-incidents' || currentScreen === 'manteniment-incidents') {
+    if ((currentScreen === 'incidents' || currentScreen === 'tic-incidents' || currentScreen === 'manteniment-incidents') && isAuthenticatedSession) {
       fetchIncidents();
       
-      if (accessToken) {
-        const loadFormDependencies = async () => {
-          try {
-            const [usersData, typesData] = await Promise.all([
-              getUsers(accessToken),
-              getIncidentTypes(accessToken)
-            ]);
-            setUsers(usersData); 
-            setIncidentTypes(typesData);
-          } catch (err) {
-            console.error("Error loading form dependencies:", err);
-            setError("Error en carregar les dades per als formularis (usuaris/tipus).");
-          }
-        };
-        loadFormDependencies();
-      }
+      // Load form dependencies only if we have a valid session
+      const loadFormDependencies = async () => {
+        try {
+          const [usersData, typesData] = await Promise.all([
+            getUsers(accessToken),
+            getIncidentTypes(accessToken)
+          ]);
+          setUsers(usersData); 
+          setIncidentTypes(typesData);
+        } catch (err) {
+          console.error("Error loading form dependencies:", err);
+          setError("Error en carregar les dades per als formularis (usuaris/tipus).");
+        }
+      };
+      loadFormDependencies();
     }
-  }, [accessToken, currentScreen]);
+  }, [accessToken, currentScreen, isAuthenticatedSession]);
 
   // Filtering logic
-  useEffect(() => {
+  const filteredIncidentsData = useMemo(() => {
     if (masterIncidents.length === 0) {
-        setIncidents([]);
-        setModifiedIncidents([]);
-        return;
+        return { incidents: [], modifiedIncidents: [] };
     }
 
     const headers = masterIncidents[0];
@@ -274,9 +309,10 @@ function App() {
     }
 
     // 4. Set the final filtered incidents for display
-    setIncidents([headers, ...filteredActiveRows]);
-    setModifiedIncidents([headers, ...filteredDeletedRows]);
-
+    return {
+      incidents: [headers, ...filteredActiveRows],
+      modifiedIncidents: [headers, ...filteredDeletedRows]
+    };
   }, [masterIncidents, filterUser, filterYear]);
 
   // Set the user filter automatically when the profile is loaded
@@ -286,10 +322,14 @@ function App() {
     }
   }, [profile]);
 
+  // Update incidents and modifiedIncidents when filtered data changes
+  useEffect(() => {
+    setIncidents(filteredIncidentsData.incidents);
+    setModifiedIncidents(filteredIncidentsData.modifiedIncidents);
+  }, [filteredIncidentsData]);
+
   const login = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
-      setAccessToken(tokenResponse.access_token);
-      localStorage.setItem('googleAccessToken', tokenResponse.access_token);
       try {
         const googleProfile = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
           headers: { 'Authorization': `Bearer ${tokenResponse.access_token}` },
@@ -298,20 +338,17 @@ function App() {
         const userProfile = await getUserProfile(googleProfile.email, tokenResponse.access_token);
 
         if (userProfile) {
+          setAccessToken(tokenResponse.access_token);
+          localStorage.setItem('googleAccessToken', tokenResponse.access_token);
+          setIsAuthenticatedSession(true); // Mark session as authenticated after successful login
           setProfile(userProfile);
           setCurrentScreen('home');
         } else {
           setError("Accés no autoritzat. El vostre correu electrònic no es troba a la llista d'usuaris permesos.");
-          setProfile(null);
-          setAccessToken(null);
-          localStorage.removeItem('googleAccessToken');
         }
       } catch (err) {
         console.error(err);
         setError(err.message || "Ha ocorregut un error durant l'inici de sessió.");
-        setProfile(null);
-        setAccessToken(null);
-        localStorage.removeItem('googleAccessToken');
       }
     },
     onError: () => {
@@ -323,6 +360,7 @@ function App() {
   const handleLogout = () => {
     setProfile(null);
     setAccessToken(null);
+    setIsAuthenticatedSession(false); // Reset session authentication flag
     setUsers([]);
     setIncidentTypes([]);
     setMasterIncidents([]);
@@ -574,23 +612,37 @@ function App() {
           )}
 
           {editingIncident !== null && (
-            <Dialog open={editingIncident !== null} onOpenChange={handleCloseForm}>
-              <DialogContent className="sm:max-w-[600px]">
-                <DialogHeader>
-                  <DialogTitle>{editingIncident.data ? 'Editar Incidència' : 'Afegir Nova Incidència'}</DialogTitle>
-                </DialogHeader>
-                <AddIncidentForm
-                  incidentToEdit={editingIncident.data}
-                  originalSheetRowIndex={editingIncident.originalSheetRowIndex}
-                  onSaveIncident={handleSaveIncident}
-                  onClose={handleCloseForm}
-                  setError={setError}
-                  profile={profile}
-                  users={users}
-                  incidentTypes={incidentTypes}
-                />
-              </DialogContent>
-            </Dialog>
+            (() => {
+              console.log("App.js: Rendering AddIncidentForm with editingIncident:", editingIncident);
+              console.log("App.js: editingIncident.data:", editingIncident.data);
+              console.log("App.js: editingIncident.data type:", typeof editingIncident.data);
+              console.log("App.js: editingIncident.data isArray:", Array.isArray(editingIncident.data));
+              if (Array.isArray(editingIncident.data)) {
+                console.log("App.js: editingIncident.data length:", editingIncident.data.length);
+                console.log("App.js: editingIncident.data content:", editingIncident.data);
+              }
+              return (
+                <Dialog open={editingIncident !== null} onOpenChange={handleCloseForm}>
+                  <DialogContent className="sm:max-w-[600px]">
+                    <DialogHeader>
+                      <DialogTitle>{editingIncident.data ? 'Editar Incidència' : 'Afegir Nova Incidència'}</DialogTitle>
+                    </DialogHeader>
+                    <AddIncidentForm
+                      incidentToEdit={editingIncident.data}
+                      originalSheetRowIndex={editingIncident.originalSheetRowIndex}
+                      onSaveIncident={handleSaveIncident}
+                      onClose={handleCloseForm}
+                      setError={setError}
+                      profile={profile}
+                      users={users}
+                      incidentTypes={incidentTypes}
+                    />
+                  </DialogContent>
+                </Dialog>
+              );
+            })()
+          )}
+          )}
           )}
 
           <SignatureConfirmPopup
@@ -611,7 +663,7 @@ function App() {
       case 'login':
         return <LoginView onLogin={login} error={error} />;
       case 'home':
-        return <HomeView onIncidentsClick={() => setCurrentScreen('incidents')} onCalendarClick={() => setCurrentScreen('calendar')} onGroupsClick={() => setCurrentScreen('groups')} onTICIncidentsClick={() => setCurrentScreen('tic-incidents')} onMantenimentClick={() => setCurrentScreen('manteniment-incidents')} onAvisosClick={() => setCurrentScreen('avisos')} accessToken={accessToken} profile={profile} onLogout={handleLogout} setProfile={setProfile} setError={setError} setCurrentScreen={setCurrentScreen} />;
+        return <HomeView onIncidentsClick={() => setCurrentScreen('incidents')} onCalendarClick={() => setCurrentScreen('calendar')} onGroupsClick={() => setCurrentScreen('groups')} onTICIncidentsClick={() => setCurrentScreen('tic-incidents')} onMantenimentClick={() => setCurrentScreen('manteniment-incidents')} onAvisosClick={() => setCurrentScreen('avisos')} onSeguimentCSIClick={() => setCurrentScreen('seguiment-csi')} accessToken={accessToken} profile={profile} onLogout={handleLogout} setProfile={setProfile} setError={setError} setCurrentScreen={setCurrentScreen} />;
       case 'incidents':
         return <ErrorBoundary><IncidentsView onBackClick={() => setCurrentScreen('home')} /></ErrorBoundary>;
       case 'calendar':
@@ -624,6 +676,8 @@ function App() {
         return <TICIncidentsView onBackClick={() => setCurrentScreen('home')} profile={profile} accessToken={accessToken} users={users} />;
       case 'manteniment-incidents':
         return <MantenimentView onBackClick={() => setCurrentScreen('home')} profile={profile} accessToken={accessToken} users={users} />;
+      case 'seguiment-csi':
+        return <SeguimentCSIView onBackClick={() => setCurrentScreen('home')} />;
       
       default:
         return <LoginView onLogin={login} error={error} />;

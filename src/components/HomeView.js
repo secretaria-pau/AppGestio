@@ -1,54 +1,31 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { getActiveAvisos } from '../avisosService';
 import { getUserProfile } from '../googleSheetsService';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter, Button } from "./ui";
 import { Info, Users, Calendar, AlertTriangle, Wrench, LogOut, Bell } from "lucide-react";
 
-const HomeView = ({ onIncidentsClick, onCalendarClick, onGroupsClick, onTICIncidentsClick, onMantenimentClick, onAvisosClick, profile, onLogout, accessToken, setProfile, setError, setCurrentScreen }) => {
+const HomeView = ({ onIncidentsClick, onCalendarClick, onGroupsClick, onTICIncidentsClick, onMantenimentClick, onAvisosClick, onSeguimentCSIClick, profile, onLogout, accessToken, setProfile, setError, setCurrentScreen }) => {
   const [avisos, setAvisos] = useState([]);
   const [loadingAvisos, setLoadingAvisos] = useState(true);
 
-  useEffect(() => {
-    const fetchAvisos = async () => {
-      if (!accessToken) return;
-      try {
-        setLoadingAvisos(true);
-        const activeAvisos = await getActiveAvisos(accessToken);
-        setAvisos(activeAvisos);
-      } catch (error) {
-        console.error("Error fetching announcements:", error);
-        // Optionally set an error state here to show in the UI
-      } finally {
-        setLoadingAvisos(false);
-      }
-    };
-
-    const loadProfile = async () => {
-      if (accessToken && !profile) {
-        try {
-          const googleProfile = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-            headers: { 'Authorization': `Bearer ${accessToken}` },
-          }).then(res => res.json());
-
-          const userProfile = await getUserProfile(googleProfile.email, accessToken);
-
-          if (userProfile) {
-            setProfile(userProfile);
-          } else {
-            setError("Accés no autoritzat. El vostre correu electrònic no es troba a la llista d'usuaris permesos.");
-            setCurrentScreen('login');
-          }
-        } catch (err) {
-          console.error(err);
-          setError(err.message || "Ha ocorregut un error durant la càrrega del perfil.");
-          setCurrentScreen('login');
-        }
-      }
-    };
-
-    loadProfile();
-    fetchAvisos();
-  }, [accessToken, setProfile, setError, setCurrentScreen]);
+  const fetchAvisos = useCallback(async () => {
+    // Only fetch avisos if we have a valid access token
+    if (!accessToken) {
+      console.log("HomeView: No accessToken provided, skipping avisos fetch.");
+      return;
+    }
+    try {
+      setLoadingAvisos(true);
+      const activeAvisos = await getActiveAvisos(accessToken);
+      setAvisos(activeAvisos);
+    } catch (error) {
+      console.error("Error fetching announcements:", error);
+      // Optionally set an error state here to show in the UI
+      // For now, we'll just fail silently on the home view to avoid showing errors before login
+    } finally {
+      setLoadingAvisos(false);
+    }
+  }, [accessToken]); // Added profile to dependency array
 
   if (!profile) {
     return <div className="flex h-screen items-center justify-center">Carregant perfil...</div>; // Or a loading spinner
@@ -58,6 +35,7 @@ const HomeView = ({ onIncidentsClick, onCalendarClick, onGroupsClick, onTICIncid
     { title: "Incidències de personal", onClick: onIncidentsClick, icon: AlertTriangle, roles: ['all'] },
     { title: "Calendaris del centre", onClick: onCalendarClick, icon: Calendar, roles: ['all'] },
     { title: "Grups d'alumnes", onClick: onGroupsClick, icon: Users, roles: ['all'] },
+    { title: "Seguiment CSI", onClick: onSeguimentCSIClick, icon: Users, roles: ['all'] },
     { title: "Incidències TIC", onClick: onTICIncidentsClick, icon: AlertTriangle, roles: ['all'] },
     { title: "Incidències Manteniment", onClick: onMantenimentClick, icon: Wrench, roles: ['Gestor', 'Direcció'] },
   ];

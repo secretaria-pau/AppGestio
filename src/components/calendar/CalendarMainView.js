@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import CalendarToolbar from './CalendarToolbar';
 import CalendarDisplay from './CalendarDisplay';
 import EventForm from './EventForm';
@@ -197,7 +197,7 @@ function CalendarMainView({ onBackClick, accessToken, profile }) {
     setIsFormOpen(true);
   };
 
-  const fetchCalendarData = async () => {
+  const fetchCalendarData = useCallback(async () => {
     if (!accessToken || !profile) return;
     setLoading(true);
     setError(null);
@@ -223,13 +223,16 @@ function CalendarMainView({ onBackClick, accessToken, profile }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [accessToken, profile, activeCalendar, calendarDate, currentView]);
 
   useEffect(() => {
-    fetchCalendarData();
-  }, [activeCalendar, accessToken, profile, calendarDate, currentView]);
+    // Only fetch calendar data if we have an access token and a profile
+    if (accessToken && profile) {
+        fetchCalendarData();
+    }
+  }, [accessToken, profile, activeCalendar, calendarDate, currentView, fetchCalendarData]);
 
-  const eventPropGetter = (view) => (event, start, end, isSelected) => {
+  const eventPropGetter = useCallback((view) => (event, start, end, isSelected) => {
     let backgroundColor = '';
 
     if (event.incidentType) {
@@ -246,7 +249,7 @@ function CalendarMainView({ onBackClick, accessToken, profile }) {
     }
 
     return { style: { backgroundColor } };
-  };
+  }, []);
 
   const activeCalendarName = Object.values(CALENDARS).find(c => c.id === activeCalendar)?.name || '';
 

@@ -45,16 +45,29 @@ const AddIncidentForm = ({
   const [selectedTypeUnit, setSelectedTypeUnit] = useState('H'); // Default to Hours
 
   useEffect(() => {
+    console.log("AddIncidentForm: useEffect triggered", { incidentToEdit, profile, incidentTypes, users });
+
+    // Asegurarse de que todas las dependencias estén disponibles
+    if (!profile || !users || users.length === 0 || !incidentTypes || incidentTypes.length === 0) {
+        console.log("AddIncidentForm: useEffect waiting for dependencies...");
+        return; // Salir temprano si las dependencias no están listas
+    }
+
     if (incidentToEdit) {
+      console.log("AddIncidentForm: Processing incidentToEdit data");
+      console.log("AddIncidentForm: incidentToEdit content:", incidentToEdit);
+      console.log("AddIncidentForm: incidentToEdit type:", typeof incidentToEdit);
+      console.log("AddIncidentForm: incidentToEdit isArray:", Array.isArray(incidentToEdit));
+      
       const mappedData = {
-        'Usuari (Email)': incidentToEdit[0] || '',
+        'Usuari (Email)': (incidentToEdit[0] || '').trim(),
         'Data Inici': toInputFormat(incidentToEdit[1] || ''),
         'Hora Inici': incidentToEdit[2] || '',
         'Data Fi': toInputFormat(incidentToEdit[3] || ''),
         'Hora Fi': incidentToEdit[4] || '',
         'Duració': incidentToEdit[5] || '',
         'Exercici': incidentToEdit[6] || '',
-        'Tipus': incidentToEdit[7] || '',
+        'Tipus': (incidentToEdit[7] || '').trim(),
         'Signatura Usuari': incidentToEdit[8] === 'TRUE',
         'Timestamp Signatura Usuari': incidentToEdit[9] || '',
         'Signatura Direcció': incidentToEdit[10] === 'TRUE',
@@ -62,8 +75,13 @@ const AddIncidentForm = ({
         'Esborrat': incidentToEdit[12] === 'TRUE',
         'Observacions': incidentToEdit[13] || '',
       };
+      
+      console.log("AddIncidentForm: Editing incident, mapped data:", mappedData);
+      console.log("AddIncidentForm: Usuari value:", mappedData['Usuari (Email)']);
+      console.log("AddIncidentForm: Tipus value:", mappedData['Tipus']);
+      
       setIncidentData(mappedData);
-      const typeObj = incidentTypes.find(t => t.type === mappedData.Tipus);
+      const typeObj = incidentTypes.find(t => t.type === mappedData['Tipus']);
       if (typeObj) {
         setSelectedTypeUnit(typeObj.durationUnit);
       } else {
@@ -87,7 +105,7 @@ const AddIncidentForm = ({
         'Esborrat': false,
       });
     }
-  }, [incidentToEdit, profile, incidentTypes]);
+  }, [incidentToEdit, profile, users, incidentTypes]);
 
   const calculateDuration = (data) => {
     const typeObj = incidentTypes.find(t => t.type === data.Tipus);
@@ -208,10 +226,18 @@ const AddIncidentForm = ({
 
   return (
     <form onSubmit={handleSubmit} className="p-4">
+      {console.log("AddIncidentForm: Rendering form with incidentData:", incidentData)}
+      {console.log("AddIncidentForm: Available users:", users)}
+      {console.log("AddIncidentForm: Available incidentTypes:", incidentTypes)}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div>
           <label htmlFor="userEmail" className="block text-sm font-medium text-gray-700 mb-1">Usuari (Email)</label>
+          {console.log("AddIncidentForm: User field value:", incidentData['Usuari (Email)'])}
+          {console.log("AddIncidentForm: User field disabled:", profile?.role === 'Usuari')}
+          {console.log("AddIncidentForm: Available users:", users)}
+          {console.log("AddIncidentForm: Matching user found:", users.find(u => u.email === incidentData['Usuari (Email)']))}
           <Select
+            key={`user-select-${incidentData['Usuari (Email)']}`}
             value={incidentData['Usuari (Email)']}
             onValueChange={(value) => handleChange({ target: { name: 'Usuari (Email)', value } })}
             disabled={profile?.role === 'Usuari'}
@@ -228,7 +254,10 @@ const AddIncidentForm = ({
         </div>
         <div>
           <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-1">Tipus</label>
+          {console.log("AddIncidentForm: Type field value:", incidentData['Tipus'])}
+          {console.log("AddIncidentForm: Available incidentTypes:", incidentTypes)}
           <Select
+            key={`type-select-${incidentData['Tipus']}`}
             value={incidentData['Tipus']}
             onValueChange={(value) => handleChange({ target: { name: 'Tipus', value } })}
             required

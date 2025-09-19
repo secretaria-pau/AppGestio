@@ -1,14 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, Card, CardContent, CardHeader, CardTitle } from "./ui";
 
 const AnnualSummaryView = ({ incidents }) => {
   const [summaryData, setSummaryData] = useState({});
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
 
-  useEffect(() => {
+  const calculatedSummaryData = useMemo(() => {
     if (!incidents || incidents.length <= 1) {
-      setSummaryData({});
-      return;
+      return {};
     }
 
     const headers = incidents[0];
@@ -21,7 +20,7 @@ const AnnualSummaryView = ({ incidents }) => {
 
     if ([userEmailIndex, durationIndex, exerciseIndex, typeIndex].includes(-1)) {
       console.error("AnnualSummaryView: Missing required columns.");
-      return;
+      return {};
     }
 
     const newSummaryData = {};
@@ -30,42 +29,47 @@ const AnnualSummaryView = ({ incidents }) => {
       const incident = item.data;
       const userEmail = incident[userEmailIndex];
       const durationStr = incident[durationIndex];
-      const year = incident[exerciseIndex];
+      const exercise = incident[exerciseIndex];
       const type = incident[typeIndex];
 
-      if (year !== selectedYear || !durationStr) return;
+      // Filter by selected year
+      if (exercise !== selectedYear) return;
 
+      // Initialize user data if not exists
       if (!newSummaryData[userEmail]) {
-        newSummaryData[userEmail] = {};
-      }
-      if (!newSummaryData[userEmail][type]) {
-        newSummaryData[userEmail][type] = { hours: 0, minutes: 0, days: 0 };
+        newSummaryData[userEmail] = { totalHours: 0, totalDays: 0, typeBreakdown: {} };
       }
 
-      if (durationStr.includes('dies')) {
-        const days = parseInt(durationStr) || 0;
-        newSummaryData[userEmail][type].days += days;
-      } else if (durationStr.includes('h')) {
-        const hourMatch = durationStr.match(/(\d+)h/);
-        const minMatch = durationStr.match(/(\d+)m/);
-        const h = hourMatch ? parseInt(hourMatch[1]) : 0;
-        const m = minMatch ? parseInt(minMatch[1]) : 0;
-        newSummaryData[userEmail][type].hours += h;
-        newSummaryData[userEmail][type].minutes += m;
+      // Parse duration
+      if (durationStr) {
+        if (durationStr.includes('h')) {
+          // Hours format: "Xh Ym"
+          const hoursMatch = durationStr.match(/(\d+)h/);
+          const minutesMatch = durationStr.match(/(\d+)m/);
+          const hours = hoursMatch ? parseInt(hoursMatch[1]) : 0;
+          const minutes = minutesMatch ? parseInt(minutesMatch[1]) : 0;
+          newSummaryData[userEmail].totalHours += hours + (minutes / 60);
+        } else if (durationStr.includes('dies')) {
+          // Days format: "X dies"
+          const daysMatch = durationStr.match(/(\d+) dies/);
+          const days = daysMatch ? parseInt(daysMatch[1]) : 0;
+          newSummaryData[userEmail].totalDays += days;
+        }
       }
+
+      // Type breakdown
+      if (!newSummaryData[userEmail].typeBreakdown[type]) {
+        newSummaryData[userEmail].typeBreakdown[type] = 0;
+      }
+      newSummaryData[userEmail].typeBreakdown[type] += 1;
     });
 
-    // Normalize minutes to hours for each entry
-    for (const user in newSummaryData) {
-      for (const type in newSummaryData[user]) {
-        const totalMinutes = newSummaryData[user][type].minutes;
-        newSummaryData[user][type].hours += Math.floor(totalMinutes / 60);
-        newSummaryData[user][type].minutes = totalMinutes % 60;
-      }
-    }
-
-    setSummaryData(newSummaryData);
+    return newSummaryData;
   }, [incidents, selectedYear]);
+
+  useEffect(() => {
+    setSummaryData(calculatedSummaryData);
+  }, [calculatedSummaryData]);
 
   const years = [...new Set(incidents.slice(1).map(item => item.data[incidents[0].indexOf('Exercici')]))].filter(Boolean).sort((a, b) => b - a);
   const allTypes = [...new Set(incidents.slice(1).map(item => item.data[incidents[0].indexOf('Tipus')]))].filter(Boolean);

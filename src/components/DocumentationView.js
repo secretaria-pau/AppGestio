@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { getIncidentTypes, getUsers } from '../googleSheetsService';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, Accordion, AccordionContent, AccordionItem, AccordionTrigger, Card, CardContent, CardHeader, CardTitle } from "./ui";
 
@@ -10,34 +10,34 @@ const DocumentationView = ({ accessToken }) => {
   const [usersLoading, setUsersLoading] = useState(true); // New state for users loading
   const [usersError, setUsersError] = useState(null); // New state for users error
 
+  const fetchIncidentTypes = useCallback(async () => {
+    try {
+      const data = await getIncidentTypes(accessToken);
+      setIncidentTypes(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [accessToken]);
+
+  const fetchUsers = useCallback(async () => { // New function to fetch users
+    try {
+      const data = await getUsers(accessToken);
+      setUsers(data);
+    } catch (err) {
+      setUsersError(err.message);
+    } finally {
+      setUsersLoading(false);
+    }
+  }, [accessToken]);
+
   useEffect(() => {
-    const fetchIncidentTypes = async () => {
-      try {
-        const data = await getIncidentTypes(accessToken);
-        setIncidentTypes(data);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    const fetchUsers = async () => { // New function to fetch users
-      try {
-        const data = await getUsers(accessToken);
-        setUsers(data);
-      } catch (err) {
-        setUsersError(err.message);
-      } finally {
-        setUsersLoading(false);
-      }
-    };
-
     if (accessToken) {
       fetchIncidentTypes();
       fetchUsers(); // Call fetchUsers
     }
-  }, [accessToken]);
+  }, [accessToken, fetchIncidentTypes, fetchUsers]);
 
   return (
     <div className="p-4">

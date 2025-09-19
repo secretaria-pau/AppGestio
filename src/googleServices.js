@@ -54,13 +54,27 @@ export async function callGASFunction(action, accessToken, params = {}) {
       delete window[callbackName]; // Clean up the global callback
       document.head.removeChild(script); // Remove the script tag
       reject(new Error('JSONP request timed out.'));
-    }, 15000); // 15 seconds timeout
+    }, 90000); // 90 seconds timeout (increased from 60s)
 
     // Construct query string from params
     const queryString = new URLSearchParams(params).toString();
     script.src = `${GAS_WEB_APP_URL}?action=${action}&callback=${callbackName}&${queryString}`;
     document.head.appendChild(script);
   });
+}
+
+/**
+ * Llama a una acción del GAS que se ejecuta de forma asíncrona.
+ * Esta función inicia la acción y devuelve inmediatamente.
+ * Se puede usar un polling posterior para comprobar el resultado.
+ * @param {string} action - La acción a iniciar en el GAS.
+ * @param {string} accessToken - El token de acceso de Google.
+ * @param {Object} params - Parámetros adicionales para la acción.
+ * @returns {Promise<Object>} - Promesa que se resuelve con la respuesta del GAS.
+ */
+export async function callGASFunctionAsync(action, accessToken, params = {}) {
+  // Esta función usa el mismo timeout que la original, ya que la llamada es rápida (solo deja una señal)
+  return callGASFunction(action, accessToken, params); 
 }
 
 async function callTICGASFunction(action, accessToken, params = {}) {
@@ -173,6 +187,36 @@ export async function getSheetData(sheetName, accessToken) {
   } catch (error) {
     console.error(`Error fetching ${sheetName} data:`, error);
     throw error;
+  }
+}
+
+/**
+ * Obtiene el valor de una celda o rango específico de la hoja de cálculo.
+ * @param {string} range - El rango a leer, por ejemplo, 'Configuració!Z1001'.
+ * @param {string} accessToken - El token de acceso de Google.
+ * @returns {Promise<string|Array|null>} - El valor de la celda o un array de valores.
+ */
+export async function getSheetCellValue(range, accessToken) {
+  try {
+    const url = `${BASE_URL}/${SPREADSHEET_ID}/values/${range}`;
+    const response = await fetchGoogleAPI(url, accessToken);
+    const values = response.values;
+    if (!values || values.length === 0) {
+      return null; // Celda vacía
+    }
+    // Si es una sola celda, devuelve el valor directamente
+    if (values.length === 1 && values[0].length === 1) {
+      return values[0][0];
+    }
+    // Si es un rango, devuelve el array
+    return values;
+  } catch (error) {
+    // Si el error es porque el rango no existe o está vacío, lo tratamos como null
+    if (error.message && (error.message.includes('Unable to parse range') || error.message.includes('No values'))) {
+        return null;
+    }
+    console.error(`Error fetching cell value for range ${range}:`, error);
+    throw error; // Relanzar otros errores
   }
 }
 

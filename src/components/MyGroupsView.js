@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getConfig, getSheetData, updateConfig, callGASFunction } from '../googleServices';
+import { getConfig, getSheetData, getSheetCellValue, updateConfig, callGASFunction, callGASFunctionAsync } from '../googleServices';
 import AdminView from './AdminView';
 import UserGroupsView from './UserGroupsView';
 import { Button, Alert, AlertDescription, AlertTitle, Card, CardContent } from "./ui";
@@ -59,7 +59,10 @@ const MyGroupsView = ({ onBackClick, accessToken, profile }) => {
   };
 
   useEffect(() => {
-    loadData();
+    // Only load data if we have an access token
+    if (accessToken) {
+        loadData();
+    }
   }, [accessToken]);
 
   const handleUpdateConfig = async (newConfig) => {
@@ -122,17 +125,77 @@ const MyGroupsView = ({ onBackClick, accessToken, profile }) => {
     }
   };
 
+  /**
+   * Inicia la sincronització de membres de forma asíncrona i fa polling per obtenir el resultat.
+   */
   const handleSyncMembers = async () => {
+    if (!accessToken) {
+        setError("No s'ha trobat el token d'accés. Si us plau, torna a iniciar sessió.");
+        return;
+    }
+
     setLoading(true);
     setError(null);
+    
+    const RESULT_CELL_RANGE = 'Configuració!Z1001'; // Ha de coincidir amb el definit a LlibreIncidenciesGAS.js
+    const POLLING_INTERVAL_MS = 10000; // Comprovar cada 10 segons
+    const MAX_ATTEMPTS = 36; // 36 intents * 10 segons = 6 minuts màxim d'espera
+
     try {
-      await callGASFunction('sincronitzarMembres', accessToken);
-      alert(`Sincronització de membres iniciada. Revisa la teva fulla de càlcul per l'estat.`);
-      loadData();
+      // 1. Iniciar la sincronització de forma asíncrona (deixa una senyal)
+      console.log("Iniciant sincronització de membres asíncronament...");
+      const response = await callGASFunctionAsync('iniciarSincronitzacioMembresAsync', accessToken);
+      
+      if (response && response.success) {
+        console.log("Sincronització iniciada correctament. Començant polling...");
+        alert(`Sincronització de membres iniciada. Comprovant l'estat cada ${POLLING_INTERVAL_MS/1000} segons.`);
+      } else {
+        throw new Error(response?.message || "Error desconegut en iniciar la sincronització.");
+      }
+
+      // 2. Iniciar polling per comprovar el resultat
+      let attempts = 0;
+      const pollForResult = async () => {
+        attempts++;
+        console.log(`Intent de polling ${attempts}/${MAX_ATTEMPTS}...`);
+
+        if (attempts > MAX_ATTEMPTS) {
+          setError("Temps d'espera exhaurit. La sincronització pot estar encara en curs. Revisa la fulla de càlcul més tard.");
+          setLoading(false);
+          return;
+        }
+
+        try {
+          // Esperar abans de fer la crida
+          await new Promise(resolve => setTimeout(resolve, POLLING_INTERVAL_MS));
+
+          // Obtenir el valor de la celda de resultats
+          const resultCellValue = await getSheetCellValue(RESULT_CELL_RANGE, accessToken);
+          console.log(`Valor de la celda ${RESULT_CELL_RANGE}:`, resultCellValue);
+
+          if (resultCellValue && typeof resultCellValue === 'string' && resultCellValue.trim() !== '') {
+            // Hem trobat un resultat
+            alert(`Sincronització finalitzada: ${resultCellValue}`);
+            loadData(); // Recarregar les dades per veure els canvis
+            setLoading(false);
+          } else {
+            // Encara no hi ha resultat, continuar polling
+            pollForResult();
+          }
+        } catch (err) {
+          console.error("Error durant el polling:", err);
+          // Podem decidir si un error de polling ha de cancel·lar tot el procés o només aquest intent
+          // Per ara, continuarem amb el polling
+          pollForResult();
+        }
+      };
+
+      // Començar el polling després d'un breu retard per assegurar que el GAS ha començat
+      setTimeout(pollForResult, POLLING_INTERVAL_MS / 2); 
+
     } catch (err) {
-      setError("Error en iniciar la sincronització de membres. Revisa la consola per a més detalls.");
-      console.error(err);
-    } finally {
+      console.error("Error en handleSyncMembers:", err);
+      setError(`Error en iniciar la sincronització de membres: ${err.message}`);
       setLoading(false);
     }
   };

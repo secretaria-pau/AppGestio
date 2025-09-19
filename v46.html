@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplicació de Seguiment d'Alumnes - CFA La Pau</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome CDN for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            min-height: 100vh;
+        }
+        .badge { padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; white-space: nowrap; }
+        .tipo-academic { background-color: #dbeafe; color: #1e40af; }
+        .tipo-social { background-color: #ede9fe; color: #5b21b6; }
+        .tipo-absentisme { background-color: #fef3c7; color: #b45309; }
+        .tipo-baixa { background-color: #fee2e2; color: #991b1b; }
+        .tipo-derivacio { background-color: #dcfce7; color: #166534; }
+        .tipo-tutoria { background-color: #cffafe; color: #0891b2; }
+        .tipo-default { background-color: #e5e7eb; color: #4b5563; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <!-- Main Container -->
+    <div class="container mx-auto p-4 md:p-8">
+
+        <!-- Authentication Section -->
+        <div id="auth-container" class="bg-white p-6 rounded-2xl shadow-xl border border-gray-200 text-center max-w-md mx-auto">
+            <h1 class="text-2xl font-bold text-gray-900">Seguiment d'Alumnes</h1>
+            <p class="text-gray-600 mt-2 mb-6">Per començar, si us plau, inicia sessió amb el teu compte de Google.</p>
+            
+            <!-- Login button for Google Identity Services -->
+            <div id="g_id_onload"
+                 data-client_id="134551406037-r4v2505iif2uqreoerjid61bcv4aktgl.apps.googleusercontent.com"
+                 data-login_uri="https://lromance.github.io/"
+                 data-callback="handleCredentialResponse">
+            </div>
+            <div class="g_id_signin"
+                 data-type="standard"
+                 data-size="large"
+                 data-theme="outline"
+                 data-text="sign_in_with"
+                 data-shape="rectangular"
+                 data-logo_alignment="left"
+                 data-width="300">
+            </div>
+            <p id="auth-status" class="mt-4 text-sm text-gray-500">Esperant l'autenticació...</p>
+        </div>
+
+        <!-- Main Application Content (Initially Hidden) -->
+        <div id="app-content" class="hidden">
+            <header class="bg-white/30 backdrop-blur-sm p-4 rounded-xl shadow-lg mb-8">
+                <div class="flex flex-col md:flex-row justify-between items-center">
+                    <div class="text-center md:text-left">
+                        <h1 class="text-2xl font-bold text-white">Seguiment d'Alumnes</h1>
+                        <p class="text-white/80 font-semibold">CFA La Pau</p>
+                    </div>
+                    <nav class="flex flex-wrap justify-center gap-2 mt-4 md:mt-0">
+                        <button onclick="showTab('grups')" class="nav-button active:scale-95 transition-transform bg-white/80 hover:bg-white text-purple-700 font-semibold py-2 px-4 rounded-lg shadow-md"><i class="fas fa-users mr-2"></i>Gestió de Grups</button>
+                        <button onclick="showTab('alumnes')" class="nav-button active:scale-95 transition-transform bg-white/80 hover:bg-white text-purple-700 font-semibold py-2 px-4 rounded-lg shadow-md"><i class="fas fa-user-graduate mr-2"></i>Gestió d'Alumnes</button>
+                        <button onclick="showTab('anotacions')" class="nav-button active:scale-95 transition-transform bg-white/80 hover:bg-white text-purple-700 font-semibold py-2 px-4 rounded-lg shadow-md"><i class="fas fa-clipboard-list mr-2"></i>Anotacions</button>
+                        <button onclick="showTab('diari')" class="nav-button active:scale-95 transition-transform bg-white/80 hover:bg-white text-purple-700 font-semibold py-2 px-4 rounded-lg shadow-md"><i class="fas fa-book-open mr-2"></i>Diari de Classe</button>
+                    </nav>
+                </div>
+            </header>
+
+            <main>
+                <!-- All tabs go here -->
+                <!-- Tab: Gestió de Grups -->
+                <div id="grups" class="tab-content bg-white p-6 rounded-xl shadow-xl">
+                    <div class="space-y-6">
+                        <!-- Section 1: Selectors and Add Group Form -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div>
+                                <h2 class="text-xl font-bold mb-4">Selecció de Grup</h2>
+                                <div class="space-y-4">
+                                    <div>
+                                        <label for="grup-select-curs" class="block text-sm font-medium text-gray-700 mb-1">1. Tria un Curs Acadèmic</label>
+                                        <select id="grup-select-curs" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-500 transition"></select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">2. Tria un Ensenyament</label>
+                                        <div id="grup-ensenyaments-list" class="space-y-2 max-h-48 overflow-y-auto pr-2 bg-gray-50 p-2 rounded-md border">
+                                            <p class="text-gray-500">Selecciona un curs per veure els ensenyaments.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-4 border border-gray-200 rounded-lg bg-gray-50 self-start">
+                                <h3 class="text-lg font-semibold mb-3">Afegir Nou Grup</h3>
+                                <form id="form-add-grup">
+                                    <div class="space-y-3">
+                                        <input type="text" id="grup-curs" placeholder="Curs Acadèmic (ex: 2024-2025)" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-500 transition" required>
+                                        <input type="text" id="grup-ensenyament" placeholder="Ensenyament (ex: SMX2)" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-500 transition" required>
+                                        <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-md shadow-md transition transform hover:scale-105">Afegir Grup</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        <!-- Section 2: Selected Group Details (Full Width) -->
+                        <div id="grup-details" class="hidden">
+                            <h2 class="text-xl font-bold mb-4">Detalls del Grup: <span id="selected-grup-name" class="text-purple-700"></span></h2>
+                            <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                                <div class="xl:col-span-1">
+                                    <h3 class="text-lg font-semibold mb-2">Alumnes Matriculats</h3>
+                                    <div class="overflow-x-auto max-h-96">
+                                        <table class="min-w-full bg-white border rounded-lg">
+                                            <thead class="bg-gray-100">
+                                                <tr><th class="py-2 px-4 border-b text-left">Nom Alumne</th></tr>
+                                            </thead>
+                                            <tbody id="grup-alumnes-list"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="xl:col-span-2">
+                                    <h3 class="text-lg font-semibold mb-2">Anotacions del Grup</h3>
+                                    <div class="overflow-auto max-h-96">
+                                        <table class="min-w-full bg-white border rounded-lg">
+                                            <thead class="bg-gray-100 sticky top-0">
+                                                <tr>
+                                                    <th class="py-2 px-4 border-b text-left">Alumne</th>
+                                                    <th class="py-2 px-4 border-b text-left">Data</th>
+                                                    <th class="py-2 px-4 border-b text-left">Tipus</th>
+                                                    <th class="py-2 px-4 border-b text-left">Anotació</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="grup-anotacions-list"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: Gestió d'Alumnes -->
+                <div id="alumnes" class="tab-content bg-white p-6 rounded-xl shadow-xl hidden">
+                    <div class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div>
+                                <h2 class="text-xl font-bold mb-4">Selecció d'Alumne</h2>
+                                 <div class="space-y-4">
+                                    <div>
+                                        <label for="alumne-select-list" class="block text-sm font-medium text-gray-700 mb-1">1. Tria un Alumne</label>
+                                        <select id="alumne-select-list" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-500 transition"></select>
+                                    </div>
+                                    <div>
+                                         <label class="block text-sm font-medium text-gray-700 mb-1">2. Tria una Matrícula</label>
+                                         <div id="alumne-matricules-list" class="space-y-2 max-h-48 overflow-y-auto pr-2 bg-gray-50 p-2 rounded-md border">
+                                            <p class="text-gray-500">Selecciona un alumne per veure les seves matrícules.</p>
+                                         </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                             <div class="p-4 border border-gray-200 rounded-lg bg-gray-50 self-start">
+                                <h3 class="text-lg font-semibold mb-3">Afegir Nou Alumne</h3>
+                                <form id="form-add-alumne">
+                                    <input type="text" id="alumne-nom" placeholder="Nom Complet de l'Alumne" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-500 transition mb-3" required>
+                                    <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-md shadow-md transition transform hover:scale-105">Afegir Alumne</button>
+                                </form>
+                                <h3 class="text-lg font-semibold mb-3 mt-6">Nova Matrícula</h3>
+                                <form id="form-add-matricula">
+                                    <div class="space-y-3">
+                                        <select id="matricula-curs" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-500 transition" required></select>
+                                        <select id="matricula-ensenyament" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-500 transition" required></select>
+                                        <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md shadow-md transition transform hover:scale-105">Matricular Alumne Seleccionat</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                         <!-- Section 2: Selected Student Annotations and Form (Full Width) -->
+                        <div id="alumne-anotacions-container" class="hidden mt-6 space-y-6">
+                            <div>
+                                <h2 class="text-xl font-bold mb-4">Anotacions de: <span id="selected-alumne-context-name" class="text-purple-700"></span></h2>
+                                <div class="overflow-auto max-h-96">
+                                    <table class="min-w-full bg-white border rounded-lg">
+                                        <thead class="bg-gray-100 sticky top-0">
+                                            <tr>
+                                                <th class="py-2 px-4 border-b text-left">Data</th>
+                                                <th class="py-2 px-4 border-b text-left">Tipus</th>
+                                                <th class="py-2 px-4 border-b text-left">Anotació</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="alumne-anotacions-list"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <!-- New Annotation Form for the selected student -->
+                            <div class="p-4 border border-gray-200 rounded-lg bg-gray-50">
+                                <h3 class="text-lg font-semibold mb-3">Nova Anotació per a <span id="form-alumne-anotacio-name"></span></h3>
+                                <form id="form-add-anotacio-alumne">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label for="anotacio-alumne-data" class="block text-sm font-medium text-gray-700">Data</label>
+                                            <input type="date" id="anotacio-alumne-data" class="w-full p-2 mt-1 border rounded-md focus:ring-2 focus:ring-purple-500 transition" required>
+                                        </div>
+                                        <div>
+                                            <label for="anotacio-alumne-tipus" class="block text-sm font-medium text-gray-700">Tipus</label>
+                                            <select id="anotacio-alumne-tipus" class="w-full p-2 mt-1 border rounded-md focus:ring-2 focus:ring-purple-500 transition" required>
+                                                <option value="academic">Acadèmic</option>
+                                                <option value="social">Social</option>
+                                                <option value="absentisme">Absentisme</option>
+                                                <option value="baixa">Baixa</option>
+                                                <option value="derivacio">Derivació</option>
+                                                <option value="tutoria">Tutoria</option>
+                                            </select>
+                                        </div>
+                                        <div class="md:col-span-2">
+                                            <label for="anotacio-alumne-text" class="block text-sm font-medium text-gray-700">Anotació</label>
+                                            <textarea id="anotacio-alumne-text" rows="3" class="w-full p-2 mt-1 border rounded-md focus:ring-2 focus:ring-purple-500 transition" required></textarea>
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="mt-4 w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-md shadow-md transition transform hover:scale-105">
+                                        Afegir Anotació
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: Anotacions -->
+                <div id="anotacions" class="tab-content bg-white p-6 rounded-xl shadow-xl hidden">
+                    <h2 class="text-xl font-bold mb-4">Cercador d'Anotacions</h2>
+                    <!-- Filters -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 p-4 bg-gray-50 rounded-lg border">
+                        <select id="filter-curs" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-500 transition"><option value="">Tots els Cursos</option></select>
+                        <select id="filter-ensenyament" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-500 transition"><option value="">Tots els Ensenyaments</option></select>
+                        <select id="filter-alumne" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-500 transition"><option value="">Tots els Alumnes</option></select>
+                    </div>
+
+                    <!-- Annotations Table -->
+                    <div class="overflow-auto max-h-[40vh] mb-6">
+                        <table class="min-w-full bg-white border rounded-lg">
+                            <thead class="bg-gray-100 sticky top-0">
+                                <tr>
+                                    <th class="py-2 px-4 border-b text-left w-1/6">Data</th>
+                                    <th class="py-2 px-4 border-b text-left w-1/6">Alumne</th>
+                                    <th class="py-2 px-4 border-b text-left w-1/6">Grup</th>
+                                    <th class="py-2 px-4 border-b text-left w-1/6">Tipus</th>
+                                    <th class="py-2 px-4 border-b text-left w-2/6">Anotació</th>
+                                </tr>
+                            </thead>
+                            <tbody id="anotacions-table-body">
+                               <!-- Rows will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="flex justify-end mb-6">
+                        <button id="btn-gemini" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md shadow-md transition transform hover:scale-105 disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
+                            <i class="fas fa-magic mr-2"></i>Generar Comentari amb IA
+                        </button>
+                    </div>
+
+
+                    <!-- New Annotation Form -->
+                    <div class="p-4 border border-gray-200 rounded-lg bg-gray-50">
+                        <h3 class="text-lg font-semibold mb-3">Nova Anotació</h3>
+                        <form id="form-add-anotacio">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Grup</label>
+                                    <input type="text" id="anotacio-grup-info" class="w-full p-2 mt-1 border bg-gray-200 rounded-md" readonly>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Alumne</label>
+                                    <input type="text" id="anotacio-alumne-info" class="w-full p-2 mt-1 border bg-gray-200 rounded-md" readonly>
+                                </div>
+                                <div>
+                                    <label for="anotacio-data" class="block text-sm font-medium text-gray-700">Data</label>
+                                    <input type="date" id="anotacio-data" class="w-full p-2 mt-1 border rounded-md focus:ring-2 focus:ring-purple-500 transition" required>
+                                </div>
+                                <div>
+                                    <label for="anotacio-tipus" class="block text-sm font-medium text-gray-700">Tipus</label>
+                                    <select id="anotacio-tipus" class="w-full p-2 mt-1 border rounded-md focus:ring-2 focus:ring-purple-500 transition" required>
+                                        <option value="academic">Acadèmic</option>
+                                        <option value="social">Social</option>
+                                        <option value="absentisme">Absentisme</option>
+                                        <option value="baixa">Baixa</option>
+                                        <option value="derivacio">Derivació</option>
+                                        <option value="tutoria">Tutoria</option>
+                                    </select>
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label for="anotacio-text" class="block text-sm font-medium text-gray-700">Anotació</label>
+                                    <textarea id="anotacio-text" rows="4" class="w-full p-2 mt-1 border rounded-md focus:ring-2 focus:ring-purple-500 transition" required></textarea>
+                                </div>
+                            </div>
+                            <button type="submit" class="mt-4 w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-md shadow-md transition transform hover:scale-105 disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
+                                Afegir Anotació
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Tab: Diari de Classe -->
+                <div id="diari" class="tab-content bg-white p-6 rounded-xl shadow-xl hidden">
+                    <h2 class="text-xl font-bold mb-4">Diari de Classe</h2>
+                    <!-- Filters -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 p-4 bg-gray-50 rounded-lg border">
+                        <select id="diari-curs" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-500 transition"><option value="">Selecciona Curs</option></select>
+                        <select id="diari-ensenyament" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-500 transition"><option value="">Selecciona Ensenyament</option></select>
+                        <input type="date" id="diari-data" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-500 transition">
+                    </div>
+                     <!-- Duplicate Row -->
+                    <div class="flex items-center gap-4 mb-4 p-4 bg-gray-50 rounded-lg border">
+                        <label for="diari-duplicar-alumne" class="font-semibold">Duplicar fila per a:</label>
+                        <select id="diari-duplicar-alumne" class="flex-grow p-2 border rounded-md focus:ring-2 focus:ring-purple-500 transition"></select>
+                        <button id="btn-duplicar-fila" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md shadow-md transition transform hover:scale-105">
+                            <i class="fas fa-plus-circle mr-2"></i>Duplicar
+                        </button>
+                    </div>
+                    <!-- Editable Table -->
+                    <div class="overflow-auto max-h-[50vh] mb-6">
+                        <table class="min-w-full bg-white border rounded-lg">
+                            <thead class="bg-gray-100 sticky top-0">
+                                <tr>
+                                    <th class="py-2 px-4 border-b text-left">Alumne</th>
+                                    <th class="py-2 px-4 border-b text-left">Tipus</th>
+                                    <th class="py-2 px-4 border-b text-left">Anotació</th>
+                                </tr>
+                            </thead>
+                            <tbody id="diari-table-body">
+                                <!-- Rows will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <button id="btn-guardar-diari" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-md shadow-lg transition transform hover:scale-105 disabled:bg-gray-400 disabled:cursor-not-allowed">
+                        <i class="fas fa-save mr-2"></i>Guardar Totes les Anotacions del Diari
+                    </button>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <!-- Confirmation Modal -->
+    <div id="confirmation-modal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center hidden z-50">
+        <div class="bg-white p-6 rounded-lg shadow-xl text-center">
+            <p id="confirmation-message" class="mb-4 text-lg">Esteu segur?</p>
+            <button id="confirm-yes" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg mr-2">Sí</button>
+            <button id="confirm-no" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg">No</button>
+        </div>
+    </div>
+    
+    <!-- Loading Modal -->
+    <div id="loading-modal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center hidden z-50">
+        <div class="bg-white p-8 rounded-lg shadow-xl text-center flex items-center gap-4">
+             <i class="fas fa-spinner fa-spin text-4xl text-purple-600"></i>
+             <p class="text-lg font-semibold">Processant...</p>
+        </div>
+    </div>
+
+    <!-- Gemini Output Modal -->
+    <div id="gemini-modal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center hidden z-50 p-4">
+        <div class="bg-white p-6 rounded-lg shadow-xl max-w-2xl w-full">
+            <h2 class="text-xl font-bold mb-4">Resum i Suggeriment de la IA</h2>
+            <div id="gemini-output" class="prose max-w-none max-h-[60vh] overflow-y-auto bg-gray-50 p-4 rounded-md border"></div>
+            <button onclick="document.getElementById('gemini-modal').classList.add('hidden')" class="mt-4 w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-md">Tancar</button>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-gray-800 text-white py-3 px-6 rounded-lg shadow-xl transition-opacity duration-300 opacity-0 z-50">
+        <p id="toast-message"></p>
+    </div>
+
+    <!-- Google API Client Library and Google Identity Services -->
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script>
+        // --- CONFIGURATION ---
+        const CLIENT_ID = '134551406037-r4v2505iif2uqreoerjid61bcv4aktgl.apps.googleusercontent.com';
+        const API_KEY = 'AIzaSyD69lkn4BcjOaR3DFJZarcQcs8dgT4CYfU';
+        const SPREADSHEET_ID = '1wlvnGyvwsIReC_1bSkB2wo4UecJPNpOTs2ksB2n8Iqc';
+        const DISCOVERY_DOCS = ["https://sheets.googleapis.com/$discovery/rest?version=v4"];
+        const SCOPES = "https://www.googleapis.com/auth/spreadsheets";
+
+        // --- GLOBAL STATE ---
+        let state = {
+            grups: [],
+            alumnes: [],
+            matricules: [],
+            anotacions: [],
+            selectedGrup: null,
+            selectedAlumne: null,
+            selectedMatriculaContext: null,
+        };
+        
+        // --- UI ELEMENTS ---
+        const authContainer = document.getElementById('auth-container');
+        const authStatus = document.getElementById('auth-status');
+        const appContent = document.getElementById('app-content');
+
+        // --- AUTHENTICATION ---
+        let tokenClient;
+
+        function gapiLoaded() {
+            gapi.load('client', initializeGapiClient);
+        }
+
+        async function initializeGapiClient() {
+            try {
+                await gapi.client.init({
+                    apiKey: API_KEY,
+                    discoveryDocs: DISCOVERY_DOCS,
+                });
+                tokenClient = google.accounts.oauth2.initTokenClient({
+                    client_id: CLIENT_ID,
+                    scope: SCOPES,
+                    callback: '', // defined later
+                });
+                authStatus.textContent = "Si us plau, inicia la sessió per continuar.";
+            } catch (err) {
+                console.error("Error al inicialitzar el client de GAPI:", err);
+                authStatus.textContent = "Error al carregar l'API de Google. Comprova la teva clau d'API.";
+            }
+        }
+
+        window.handleCredentialResponse = async (response) => {
+            if (response.credential) {
+                tokenClient.callback = async (resp) => {
+                    if (resp.error !== undefined) {
+                        throw (resp);
+                    }
+                    updateSigninStatus(true);
+                };
+                tokenClient.requestAccessToken({ prompt: '' });
+            }
+        };
+
+        async function updateSigninStatus(isSignedIn) {
+            if (isSignedIn) {
+                authContainer.classList.add('hidden');
+                appContent.classList.remove('hidden');
+                await initializeApp();
+            }
+        }
+
+        // --- API & DATA HANDLING ---
+        async function fetchData(sheetName) {
+            showLoading();
+            try {
+                const response = await gapi.client.sheets.spreadsheets.values.get({
+                    spreadsheetId: SPREADSHEET_ID,
+                    range: sheetName,
+                });
+                const rows = response.result.values || [];
+                if (rows.length < 1) {
+                    return []; // Return empty if no data or headers
+                }
+                const headers = rows.shift(); // Get headers
+                // Convert array of arrays to array of objects
+                const data = rows.map(row => {
+                    let obj = {};
+                    headers.forEach((header, index) => {
+                        obj[header] = row[index];
+                    });
+                    return obj;
+                });
+                return data;
+            } catch (err) {
+                console.error(`Error completo al cargar datos de ${sheetName}:`, err);
+                showToast(`Error al cargar datos de ${sheetName}: ${err.result.error.message}`, 'error');
+                return [];
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function postData(sheetName, data) {
+            showLoading();
+            try {
+                const dataArray = Array.isArray(data) ? data : [data];
+                if (dataArray.length === 0) return { success: true };
+
+                // First, get the headers to ensure correct column order
+                const headerResponse = await gapi.client.sheets.spreadsheets.values.get({
+                    spreadsheetId: SPREADSHEET_ID,
+                    range: `${sheetName}!1:1`,
+                });
+                const headers = headerResponse.result.values[0];
+
+                const valuesToAppend = dataArray.map(obj => {
+                    return headers.map(header => obj[header] || "");
+                });
+
+                const response = await gapi.client.sheets.spreadsheets.values.append({
+                    spreadsheetId: SPREADSHEET_ID,
+                    range: `${sheetName}!A1`,
+                    valueInputOption: 'USER_ENTERED',
+                    insertDataOption: 'INSERT_ROWS',
+                    resource: {
+                        values: valuesToAppend,
+                    },
+                });
+                return { success: true };
+            } catch (err) {
+                console.error(`Error completo al guardar datos en ${sheetName}:`, err);
+                showToast(`Error guardando datos: ${err.result.error.message}`, 'error');
+                return { success: false };
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        // --- UI & DOM MANIPULATION ---
+        function showTab(tabId) { document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden')); document.getElementById(tabId).classList.remove('hidden'); }
+        function showToast(message, type = 'success') { const toast = document.getElementById('toast'); const toastMessage = document.getElementById('toast-message'); toastMessage.textContent = message; toast.className = `fixed bottom-5 right-5 text-white py-3 px-6 rounded-lg shadow-xl transition-opacity duration-300 z-50 ${type === 'error' ? 'bg-red-600' : 'bg-green-600'}`; toast.classList.remove('opacity-0'); const duration = type === 'error' ? 8000 : 3000; setTimeout(() => { toast.classList.add('opacity-0'); }, duration); }
+        function showLoading() { document.getElementById('loading-modal').classList.remove('hidden'); }
+        function hideLoading() { document.getElementById('loading-modal').classList.add('hidden'); }
+        function showConfirmation(message, callback) { const modal = document.getElementById('confirmation-modal'); document.getElementById('confirmation-message').textContent = message; modal.classList.remove('hidden'); const yesBtn = document.getElementById('confirm-yes'); const noBtn = document.getElementById('confirm-no'); const listenerYes = () => { modal.classList.add('hidden'); callback(true); yesBtn.removeEventListener('click', listenerYes); noBtn.removeEventListener('click', listenerNo); }; const listenerNo = () => { modal.classList.add('hidden'); callback(false); yesBtn.removeEventListener('click', listenerYes); noBtn.removeEventListener('click', listenerNo); }; yesBtn.addEventListener('click', listenerYes, { once: true }); noBtn.addEventListener('click', listenerNo, { once: true }); }
+        function formatDate(dateInput) { if (!dateInput) return ''; let date; if (dateInput instanceof Date) { date = dateInput; } else { const parts = String(dateInput).split('T')[0].split('-'); if (parts.length !== 3) return dateInput; date = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2])); } if (isNaN(date.getTime())) return String(dateInput); const day = String(date.getUTCDate()).padStart(2, '0'); const month = String(date.getUTCMonth() + 1).padStart(2, '0'); const year = date.getUTCFullYear(); return `${day}/${month}/${year}`; }
+
+        // --- INITIALIZATION ---
+        async function initializeApp() {
+            showLoading();
+            [state.grups, state.alumnes, state.matricules, state.anotacions] = await Promise.all([
+                fetchData('Grups'),
+                fetchData('Alumnes'),
+                fetchData('Matrícules'),
+                fetchData('Anotacions')
+            ]);
+            
+            initTabs();
+            
+            document.getElementById('anotacio-data').valueAsDate = new Date();
+            document.getElementById('diari-data').valueAsDate = new Date();
+            document.getElementById('anotacio-alumne-data').valueAsDate = new Date();
+
+            hideLoading();
+            showTab('grups');
+        }
+
+        function initTabs() {
+            initGrupsTab();
+            initAlumnesTab();
+            initAnotacionsTab();
+            initDiariTab();
+        }
+
+        function refreshAllDropdowns() {
+            // This function will re-populate all dynamic dropdowns
+            populateGrupCursSelector();
+            populateAlumneSelector();
+            populateMatriculaDropdowns();
+            populateAnotacionsFilters();
+            initDiariTab(); // Re-initializes the diary tab dropdowns
+        }
+
+        // --- GESTIÓ DE GRUPS TAB ---
+        function initGrupsTab() {
+            populateGrupCursSelector();
+            document.getElementById('grup-select-curs').addEventListener('change', (e) => populateGrupEnsenyamentsList(e.target.value));
+            document.getElementById('form-add-grup').addEventListener('submit', handleAddGrup);
+        }
+        
+        function populateGrupCursSelector() {
+            const select = document.getElementById('grup-select-curs');
+            const cursos = [...new Set(state.grups.map(g => g['Curs Acadèmic']))];
+            select.innerHTML = '<option value="">Selecciona un curs...</option>';
+            cursos.sort().forEach(curs => {
+                const option = document.createElement('option');
+                option.value = curs;
+                option.textContent = curs;
+                select.appendChild(option);
+            });
+        }
+
+        function populateGrupEnsenyamentsList(curs) {
+            const list = document.getElementById('grup-ensenyaments-list');
+            document.getElementById('grup-details').classList.add('hidden');
+            list.innerHTML = '';
+
+            if (!curs) {
+                list.innerHTML = '<p class="text-gray-500">Selecciona un curs per veure els ensenyaments.</p>';
+                return;
+            }
+
+            const ensenyaments = state.grups
+                .filter(g => g['Curs Acadèmic'] === curs)
+                .map(g => g['Ensenyament']);
+            
+            if (ensenyaments.length === 0) {
+                 list.innerHTML = '<p class="text-gray-500">No hi ha ensenyaments per a aquest curs.</p>';
+                 return;
+            }
+
+            ensenyaments.sort().forEach(ensenyament => {
+                const div = document.createElement('div');
+                div.className = 'p-3 bg-white hover:bg-purple-100 rounded-lg cursor-pointer transition shadow-sm border';
+                div.textContent = ensenyament;
+                div.onclick = () => handleGrupClick(curs, ensenyament);
+                list.appendChild(div);
+            });
+        }
+        
+        function handleGrupClick(curs, ensenyament) {
+            state.selectedGrup = { curs, ensenyament };
+            document.getElementById('selected-grup-name').textContent = `${curs} / ${ensenyament}`;
+            
+            const alumnesMatriculats = state.matricules
+                .filter(m => m.Curs === curs && m.Ensenyament === ensenyament)
+                .map(m => m.Alumne);
+            
+            const alumnesListBody = document.getElementById('grup-alumnes-list');
+            alumnesListBody.innerHTML = alumnesMatriculats.sort().map(alumne => `<tr><td class="py-2 px-4 border-b">${alumne}</td></tr>`).join('');
+            if (alumnesMatriculats.length === 0) {
+                alumnesListBody.innerHTML = '<tr><td class="py-2 px-4 border-b text-gray-500">No hi ha alumnes.</td></tr>';
+            }
+
+            const anotacionsDelGrup = state.anotacions
+                .filter(a => alumnesMatriculats.includes(a.Alumne) && a.Ensenyament === ensenyament)
+                .sort((a, b) => {
+                    const nameA = a.Alumne.toLowerCase();
+                    const nameB = b.Alumne.toLowerCase();
+                    if (nameA < nameB) return -1;
+                    if (nameA > nameB) return 1;
+                    return new Date(b.Data) - new Date(a.Data);
+                });
+
+            const anotacionsListBody = document.getElementById('grup-anotacions-list');
+            anotacionsListBody.innerHTML = anotacionsDelGrup.map(a => `
+                <tr class="hover:bg-gray-50">
+                    <td class="py-2 px-4 border-b">${a.Alumne}</td>
+                    <td class="py-2 px-4 border-b">${formatDate(a.Data)}</td>
+                    <td class="py-2 px-4 border-b"><span class="badge tipo-${a.Tipus.toLowerCase() || 'default'}">${a.Tipus}</span></td>
+                    <td class="py-2 px-4 border-b">${a.Anotació}</td>
+                </tr>
+            `).join('');
+            if (anotacionsDelGrup.length === 0) {
+                anotacionsListBody.innerHTML = '<tr><td colspan="4" class="py-2 px-4 border-b text-center text-gray-500">No hi ha anotacions.</td></tr>';
+            }
+
+            document.getElementById('grup-details').classList.remove('hidden');
+        }
+
+        async function handleAddGrup(e) {
+            e.preventDefault();
+            const curs = document.getElementById('grup-curs').value;
+            const ensenyament = document.getElementById('grup-ensenyament').value;
+            const newGrup = { 'Curs Acadèmic': curs, 'Ensenyament': ensenyament };
+            
+            const result = await postData('Grups', newGrup);
+            if(result.success) {
+                state.grups.push(newGrup);
+                refreshAllDropdowns();
+                e.target.reset();
+                showToast('Grup afegit correctament!');
+            }
+        }
+
+        // --- GESTIÓ D'ALUMNES TAB ---
+        function initAlumnesTab() {
+            populateAlumneSelector();
+            populateMatriculaDropdowns();
+            document.getElementById('alumne-select-list').addEventListener('change', (e) => handleAlumneSelection(e.target.value));
+            document.getElementById('form-add-alumne').addEventListener('submit', handleAddAlumne);
+            document.getElementById('form-add-matricula').addEventListener('submit', handleAddMatricula);
+            document.getElementById('form-add-anotacio-alumne').addEventListener('submit', handleAddAnotacioFromAlumneTab);
+            document.getElementById('matricula-curs').addEventListener('change', (e) => populateMatriculaDropdowns(e.target.value));
+        }
+
+        function populateAlumneSelector() {
+            const select = document.getElementById('alumne-select-list');
+            select.innerHTML = '<option value="">Selecciona un alumne...</option>';
+            state.alumnes.sort((a,b) => a.Nom.localeCompare(b.Nom)).forEach(alumne => {
+                const option = document.createElement('option');
+                option.value = alumne.Nom;
+                option.textContent = alumne.Nom;
+                select.appendChild(option);
+            });
+        }
+
+        function populateMatriculaDropdowns(selectedCurs = null) {
+            const cursos = [...new Set(state.grups.map(g => g['Curs Acadèmic']))];
+            const cursSelect = document.getElementById('matricula-curs');
+            
+            if (cursSelect.options.length <= 1) {
+                cursSelect.innerHTML = '<option value="">Selecciona un curs...</option>' + cursos.sort().map(c => `<option value="${c}">${c}</option>`).join('');
+            }
+
+            const ensenyamentSelect = document.getElementById('matricula-ensenyament');
+            const currentSelectedCurs = selectedCurs || cursSelect.value;
+            
+            if (!currentSelectedCurs) {
+                ensenyamentSelect.innerHTML = '<option value="">Tria un curs primer</option>';
+                return;
+            }
+
+            const ensenyaments = [...new Set(state.grups.filter(g => g['Curs Acadèmic'] === currentSelectedCurs).map(g => g['Ensenyament']))];
+            ensenyamentSelect.innerHTML = ensenyaments.sort().map(e => `<option value="${e}">${e}</option>`).join('');
+        }
+
+        function handleAlumneSelection(nomAlumne) {
+            state.selectedAlumne = nomAlumne;
+            const matriculesList = document.getElementById('alumne-matricules-list');
+            document.getElementById('alumne-anotacions-container').classList.add('hidden');
+            matriculesList.innerHTML = '';
+
+            if (!nomAlumne) {
+                matriculesList.innerHTML = '<p class="text-gray-500">Selecciona un alumne per veure les seves matrícules.</p>';
+                return;
+            }
+
+            const matriculesDeAlumne = state.matricules.filter(m => m.Alumne === nomAlumne);
+            if(matriculesDeAlumne.length === 0) {
+                matriculesList.innerHTML = '<p class="text-gray-500">Aquest alumne no té matrícules.</p>';
+                return;
+            }
+
+            matriculesDeAlumne.sort((a,b) => b.Curs.localeCompare(a.Curs)).forEach(m => {
+                 const div = document.createElement('div');
+                div.className = 'p-3 bg-white hover:bg-purple-100 rounded-lg cursor-pointer transition shadow-sm border';
+                div.textContent = `${m.Curs} / ${m.Ensenyament}`;
+                div.onclick = () => handleMatriculaSelection(m.Curs, m.Ensenyament, nomAlumne);
+                matriculesList.appendChild(div);
+            });
+        }
+
+        function handleMatriculaSelection(curs, ensenyament, alumne) {
+            state.selectedMatriculaContext = { curs, ensenyament, alumne };
+            document.getElementById('selected-alumne-context-name').textContent = `${alumne} a ${curs} / ${ensenyament}`;
+            document.getElementById('form-alumne-anotacio-name').textContent = alumne;
+            const anotacionsListBody = document.getElementById('alumne-anotacions-list');
+
+            const anotacionsFiltrades = state.anotacions
+                .filter(a => a.Alumne === alumne && a.Ensenyament === ensenyament)
+                .sort((a, b) => new Date(b.Data) - new Date(a.Data));
+
+            anotacionsListBody.innerHTML = anotacionsFiltrades.map(a => `
+                 <tr class="hover:bg-gray-50">
+                    <td class="py-2 px-4 border-b">${formatDate(a.Data)}</td>
+                    <td class="py-2 px-4 border-b"><span class="badge tipo-${a.Tipus.toLowerCase() || 'default'}">${a.Tipus}</span></td>
+                    <td class="py-2 px-4 border-b">${a.Anotació}</td>
+                </tr>
+            `).join('');
+
+             if (anotacionsFiltrades.length === 0) {
+                anotacionsListBody.innerHTML = '<tr><td colspan="3" class="py-2 px-4 border-b text-center text-gray-500">No hi ha anotacions per a aquesta matrícula.</td></tr>';
+            }
+
+            document.getElementById('alumne-anotacions-container').classList.remove('hidden');
+        }
+
+        async function handleAddAlumne(e) {
+            e.preventDefault();
+            const nom = document.getElementById('alumne-nom').value;
+            const newAlumne = { 'Nom': nom };
+            const result = await postData('Alumnes', newAlumne);
+            if(result.success) {
+                state.alumnes.push(newAlumne);
+                refreshAllDropdowns();
+                e.target.reset();
+                showToast('Alumne afegit correctament!');
+            }
+        }
+
+        async function handleAddMatricula(e) {
+            e.preventDefault();
+            const selectedAlumneName = document.getElementById('alumne-select-list').value;
+            if(!selectedAlumneName) {
+                showToast('Selecciona un alumne del desplegable primer', 'error');
+                return;
+            }
+            const curs = document.getElementById('matricula-curs').value;
+            const ensenyament = document.getElementById('matricula-ensenyament').value;
+            const newMatricula = { 'Curs': curs, 'Ensenyament': ensenyament, 'Alumne': selectedAlumneName };
+            
+            const result = await postData('Matrícules', newMatricula);
+            if(result.success) {
+                state.matricules.push(newMatricula);
+                handleAlumneSelection(selectedAlumneName); // Refresh the list
+                showToast('Matrícula afegida correctament!');
+            }
+        }
+        
+        async function handleAddAnotacioFromAlumneTab(e) {
+            e.preventDefault();
+            const { curs, ensenyament, alumne } = state.selectedMatriculaContext;
+            
+            const data = document.getElementById('anotacio-alumne-data').value;
+            const tipus = document.getElementById('anotacio-alumne-tipus').value;
+            const anotacio = document.getElementById('anotacio-alumne-text').value;
+
+            const newAnotacio = { 'Ensenyament': ensenyament, 'Alumne': alumne, 'Data': data, 'Tipus': tipus, 'Anotació': anotacio };
+            
+            showConfirmation(`Vols afegir aquesta anotació per a ${alumne}?`, async (confirmed) => {
+                if (confirmed) {
+                    const result = await postData('Anotacions', newAnotacio);
+                    if (result.success) {
+                        state.anotacions.push(newAnotacio);
+                        handleMatriculaSelection(curs, ensenyament, alumne);
+                        e.target.reset();
+                        document.getElementById('anotacio-alumne-data').valueAsDate = new Date();
+                        showToast('Anotació afegida correctament!');
+                    }
+                }
+            });
+        }
+
+
+        // --- ANOTACIONS TAB ---
+        function initAnotacionsTab() {
+            populateAnotacionsFilters();
+            document.getElementById('filter-curs').addEventListener('change', () => {
+                const curs = document.getElementById('filter-curs').value;
+                populateAnotacionsFilters(curs);
+            });
+            document.getElementById('filter-ensenyament').addEventListener('change', () => {
+                const curs = document.getElementById('filter-curs').value;
+                const ensenyament = document.getElementById('filter-ensenyament').value;
+                populateAnotacionsFilters(curs, ensenyament);
+            });
+            document.getElementById('filter-alumne').addEventListener('change', handleAnotacionsFilterChange);
+            document.getElementById('form-add-anotacio').addEventListener('submit', handleAddAnotacio);
+            document.getElementById('btn-gemini').addEventListener('click', handleGeminiClick);
+        }
+
+        function populateAnotacionsFilters(selectedCurs = null, selectedEnsenyament = null) {
+            const cursSelect = document.getElementById('filter-curs');
+            const ensenyamentSelect = document.getElementById('filter-ensenyament');
+            const alumneSelect = document.getElementById('filter-alumne');
+
+            const previousCurs = cursSelect.value;
+            const previousEnsenyament = ensenyamentSelect.value;
+
+            if (!selectedCurs && !selectedEnsenyament) { // First load
+                const cursos = [...new Set(state.grups.map(g => g['Curs Acadèmic']))];
+                cursSelect.innerHTML = '<option value="">Tots els Cursos</option>' + cursos.sort().map(c => `<option value="${c}">${c}</option>`).join('');
+            }
+
+            const currentSelectedCurs = selectedCurs || previousCurs;
+            
+            if (currentSelectedCurs) {
+                ensenyamentSelect.disabled = false;
+                const ensenyaments = [...new Set(state.grups.filter(g => g['Curs Acadèmic'] === currentSelectedCurs).map(g => g['Ensenyament']))];
+                ensenyamentSelect.innerHTML = '<option value="">Tots els Ensenyaments</option>' + ensenyaments.sort().map(e => `<option value="${e}">${e}</option>`).join('');
+                if (selectedCurs) ensenyamentSelect.value = selectedEnsenyament || "";
+                else ensenyamentSelect.value = previousEnsenyament;
+            } else {
+                ensenyamentSelect.innerHTML = '<option value="">Tots els Ensenyaments</option>';
+                ensenyamentSelect.disabled = true;
+            }
+
+            const currentSelectedEnsenyament = ensenyamentSelect.value;
+            if (currentSelectedCurs && currentSelectedEnsenyament) {
+                const alumnes = [...new Set(state.matricules.filter(m => m.Curs === currentSelectedCurs && m.Ensenyament === currentSelectedEnsenyament).map(m => m.Alumne))];
+                alumneSelect.innerHTML = '<option value="">Tots els Alumnes</option>' + alumnes.sort().map(a => `<option value="${a}">${a}</option>`).join('');
+            } else if (currentSelectedCurs) {
+                const alumnes = [...new Set(state.matricules.filter(m => m.Curs === currentSelectedCurs).map(m => m.Alumne))];
+                alumneSelect.innerHTML = '<option value="">Tots els Alumnes</option>' + alumnes.sort().map(a => `<option value="${a}">${a}</option>`).join('');
+            } else {
+                 const allAlumnes = [...new Set(state.alumnes.map(a => a.Nom))];
+                 alumneSelect.innerHTML = '<option value="">Tots els Alumnes</option>' + allAlumnes.sort().map(a => `<option value="${a}">${a}</option>`).join('');
+            }
+
+            handleAnotacionsFilterChange();
+        }
+
+        function handleAnotacionsFilterChange() {
+            const curs = document.getElementById('filter-curs').value;
+            const ensenyament = document.getElementById('filter-ensenyament').value;
+            const alumne = document.getElementById('filter-alumne').value;
+
+            let filtered = [...state.anotacions];
+            
+            if (curs) {
+                const matriculesDelCurs = state.matricules.filter(m => m.Curs === curs);
+                const alumnesDelCurs = matriculesDelCurs.map(m => m.Alumne);
+                const ensenyamentsDelCurs = [...new Set(matriculesDelCurs.map(m => m.Ensenyament))];
+                filtered = filtered.filter(a => alumnesDelCurs.includes(a.Alumne) && ensenyamentsDelCurs.includes(a.Ensenyament));
+            }
+
+            if (ensenyament) {
+                filtered = filtered.filter(a => a.Ensenyament === ensenyament);
+            }
+            if (alumne) {
+                filtered = filtered.filter(a => a.Alumne === alumne);
+            }
+
+
+            filtered.sort((a, b) => {
+                const matriculaA = state.matricules.find(m => m.Alumne === a.Alumne && m.Ensenyament === a.Ensenyament);
+                const matriculaB = state.matricules.find(m => m.Alumne === b.Alumne && m.Ensenyament === b.Ensenyament);
+                const grupA = matriculaA ? `${matriculaA.Curs} / ${a.Ensenyament}` : a.Ensenyament;
+                const grupB = matriculaB ? `${matriculaB.Curs} / ${b.Ensenyament}` : b.Ensenyament;
+                if (grupA.localeCompare(grupB) !== 0) return grupA.localeCompare(grupB);
+                if (a.Alumne.localeCompare(b.Alumne) !== 0) return a.Alumne.localeCompare(b.Alumne);
+                return new Date(b.Data) - new Date(a.Data);
+            });
+            
+            const tableBody = document.getElementById('anotacions-table-body');
+            tableBody.innerHTML = filtered.map(a => {
+                const matricula = state.matricules.find(m => m.Alumne === a.Alumne && m.Ensenyament === a.Ensenyament);
+                const grupText = matricula ? `${matricula.Curs} / ${a.Ensenyament}` : a.Ensenyament;
+                return `
+                <tr class="hover:bg-gray-50">
+                    <td class="py-2 px-4 border-b">${formatDate(a.Data)}</td>
+                    <td class="py-2 px-4 border-b">${a.Alumne}</td>
+                    <td class="py-2 px-4 border-b">${grupText}</td>
+                    <td class="py-2 px-4 border-b"><span class="badge tipo-${a.Tipus.toLowerCase() || 'default'}">${a.Tipus}</span></td>
+                    <td class="py-2 px-4 border-b w-2/5">${a.Anotació}</td>
+                </tr>
+            `}).join('');
+
+            const formGrup = document.getElementById('anotacio-grup-info');
+            const formAlumne = document.getElementById('anotacio-alumne-info');
+            const submitBtn = document.querySelector('#form-add-anotacio button[type="submit"]');
+            const geminiBtn = document.getElementById('btn-gemini');
+
+            if (curs && ensenyament && alumne) {
+                formGrup.value = `${curs} / ${ensenyament}`;
+                formAlumne.value = alumne;
+                submitBtn.disabled = false;
+                geminiBtn.disabled = filtered.length === 0;
+            } else {
+                formGrup.value = 'Selecciona curs, ensenyament i alumne';
+                formAlumne.value = '';
+                submitBtn.disabled = true;
+                geminiBtn.disabled = !(alumne && filtered.length > 0);
+            }
+        }
+
+        async function handleAddAnotacio(e) {
+            e.preventDefault();
+            const curs = document.getElementById('filter-curs').value;
+            const ensenyament = document.getElementById('filter-ensenyament').value;
+            const alumne = document.getElementById('filter-alumne').value;
+            
+            const data = document.getElementById('anotacio-data').value;
+            const tipus = document.getElementById('anotacio-tipus').value;
+            const anotacio = document.getElementById('anotacio-text').value;
+
+            const newAnotacio = { 'Ensenyament': ensenyament, 'Alumne': alumne, 'Data': data, 'Tipus': tipus, 'Anotació': anotacio };
+            
+            showConfirmation(`Vols afegir aquesta anotació per a ${alumne}?`, async (confirmed) => {
+                if (confirmed) {
+                    const result = await postData('Anotacions', newAnotacio);
+                    if (result.success) {
+                        state.anotacions.push(newAnotacio);
+                        handleAnotacionsFilterChange();
+                        e.target.reset();
+                        document.getElementById('anotacio-data').valueAsDate = new Date();
+                        showToast('Anotació afegida correctament!');
+                    }
+                }
+            });
+        }
+        
+        async function handleGeminiClick() {
+            const alumne = document.getElementById('filter-alumne').value;
+            if (!alumne) {
+                showToast('Selecciona un alumne per generar el resum.', 'error');
+                return;
+            }
+            
+            const tableRows = document.querySelectorAll('#anotacions-table-body tr');
+            const anotacions = Array.from(tableRows).map(row => {
+                const cells = row.querySelectorAll('td');
+                return {
+                    data: cells[0].textContent,
+                    tipus: cells[3].querySelector('span').textContent,
+                    anotacio: cells[4].textContent,
+                };
+            });
+            
+            if (anotacions.length === 0) {
+                showToast('No hi ha anotacions per a generar el resum.', 'error');
+                return;
+            }
+
+            generarComentariGemini(anotacions, alumne);
+        }
+
+        // --- DIARI DE CLASSE TAB ---
+        function initDiariTab() {
+            const cursos = [...new Set(state.grups.map(g => g['Curs Acadèmic']))];
+            const cursSelect = document.getElementById('diari-curs');
+            cursSelect.innerHTML = '<option value="">Selecciona Curs</option>' + cursos.sort().map(c => `<option value="${c}">${c}</option>`).join('');
+            
+            document.getElementById('diari-curs').addEventListener('change', (e) => populateDiariEnsenyaments(e.target.value));
+            document.getElementById('diari-ensenyament').addEventListener('change', handleDiariFilterChange);
+            document.getElementById('btn-duplicar-fila').addEventListener('click', handleDuplicarFila);
+            document.getElementById('btn-guardar-diari').addEventListener('click', handleGuardarDiari);
+            populateDiariEnsenyaments(cursSelect.value);
+        }
+
+        function populateDiariEnsenyaments(curs) {
+            const ensenyamentSelect = document.getElementById('diari-ensenyament');
+            if (!curs) {
+                ensenyamentSelect.innerHTML = '<option value="">Tria un curs primer</option>';
+                return;
+            }
+            const ensenyaments = [...new Set(state.grups.filter(g => g['Curs Acadèmic'] === curs).map(g => g['Ensenyament']))];
+            ensenyamentSelect.innerHTML = '<option value="">Selecciona Ensenyament</option>' + ensenyaments.sort().map(e => `<option value="${e}">${e}</option>`).join('');
+            handleDiariFilterChange();
+        }
+
+        function handleDiariFilterChange() {
+            const curs = document.getElementById('diari-curs').value;
+            const ensenyament = document.getElementById('diari-ensenyament').value;
+            const tableBody = document.getElementById('diari-table-body');
+            const duplicarSelect = document.getElementById('diari-duplicar-alumne');
+            const guardarBtn = document.getElementById('btn-guardar-diari');
+            
+            tableBody.innerHTML = '';
+            duplicarSelect.innerHTML = '';
+            guardarBtn.disabled = true;
+
+            if (curs && ensenyament) {
+                const alumnesMatriculats = state.matricules
+                    .filter(m => m.Curs === curs && m.Ensenyament === ensenyament)
+                    .map(m => m.Alumne);
+                
+                if (alumnesMatriculats.length > 0) {
+                    tableBody.innerHTML = alumnesMatriculats.sort().map(alumne => createDiariRow(alumne)).join('');
+                    duplicarSelect.innerHTML = alumnesMatriculats.sort().map(a => `<option value="${a}">${a}</option>`).join('');
+                    guardarBtn.disabled = false;
+                } else {
+                     tableBody.innerHTML = '<tr><td colspan="3" class="text-center p-4">No hi ha alumnes matriculats en aquest grup.</td></tr>';
+                }
+            }
+        }
+
+        function createDiariRow(alumne) {
+            return `
+                <tr class="hover:bg-gray-50 align-top">
+                    <td class="py-2 px-4 border-b" data-alumne="${alumne}">${alumne}</td>
+                    <td class="py-2 px-4 border-b">
+                        <select class="diari-tipus w-full p-2 border rounded-md">
+                            <option value="academic">Acadèmic</option>
+                            <option value="social">Social</option>
+                            <option value="absentisme">Absentisme</option>
+                            <option value="baixa">Baixa</option>
+                            <option value="derivacio">Derivació</option>
+                            <option value="tutoria">Tutoria</option>
+                        </select>
+                    </td>
+                    <td class="py-2 px-4 border-b">
+                        <textarea class="diari-anotacio w-full p-2 border rounded-md" rows="1" placeholder="Anotació curta..."></textarea>
+                    </td>
+                </tr>
+            `;
+        }
+
+        function handleDuplicarFila() {
+            const alumne = document.getElementById('diari-duplicar-alumne').value;
+            if (alumne) {
+                const tableBody = document.getElementById('diari-table-body');
+                tableBody.insertAdjacentHTML('beforeend', createDiariRow(alumne));
+            }
+        }
+
+        async function handleGuardarDiari() {
+            const curs = document.getElementById('diari-curs').value;
+            const ensenyament = document.getElementById('diari-ensenyament').value;
+            const data = document.getElementById('diari-data').value;
+
+            if (!curs || !ensenyament || !data) {
+                showToast('Selecciona curs, ensenyament i data', 'error');
+                return;
+            }
+
+            const rows = document.querySelectorAll('#diari-table-body tr');
+            const novesAnotacions = [];
+            rows.forEach(row => {
+                const anotacioInput = row.querySelector('.diari-anotacio');
+                if (anotacioInput && anotacioInput.value.trim() !== '') {
+                    novesAnotacions.push({
+                        'Ensenyament': ensenyament,
+                        'Alumne': row.querySelector('td[data-alumne]').dataset.alumne,
+                        'Data': data,
+                        'Tipus': row.querySelector('.diari-tipus').value,
+                        'Anotació': anotacioInput.value.trim()
+                    });
+                }
+            });
+
+            if (novesAnotacions.length === 0) {
+                showToast('No hi ha cap anotació per guardar.', 'error');
+                return;
+            }
+
+            showConfirmation(`Vols guardar ${novesAnotacions.length} anotacions?`, async (confirmed) => {
+                if(confirmed) {
+                    const result = await postData('Anotacions', novesAnotacions);
+                    if (result.success) {
+                        state.anotacions.push(...novesAnotacions);
+                        showToast(`${novesAnotacions.length} anotacions guardades correctament!`);
+                        handleDiariFilterChange(); // Reset table
+                    }
+                }
+            });
+        }
+        
+        // --- GEMINI API INTEGRATION ---
+        async function generarComentariGemini(anotacions, alumne) {
+            showLoading();
+            try {
+                const prompt = `Ets un tutor expert. Basant-te en les següents anotacions sobre l'alumne ${alumne}, fes un resum concís de la seva evolució en format de punts clau i, a continuació, proposa un suggeriment clar i accionable per a la seva millora. Estructura la resposta amb un títol "Resum d'Evolució" i un altre "Suggeriment". Anotacions:\n${anotacions.map(a => `${a.data} (${a.tipus}): ${a.anotacio}`).join('\n')}`;
+
+                let chatHistory = [];
+                chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+                const payload = { contents: chatHistory };
+                const apiKey = "AIzaSyDHLqY0bxDKJPS7hmVY1zTmzlivK5f4OhQ";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+                
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorDetails = await response.text();
+                    throw new Error(`Error de l'API: ${response.status} ${response.statusText}. Detalls: ${errorDetails}`);
+                }
+
+                const result = await response.json();
+                const text = result.candidates[0].content.parts[0].text;
+                
+                showGeminiOutput(text);
+                showToast('Resum i suggeriment generats correctament!');
+            } catch (error) {
+                console.error('Error al generar el resum amb Gemini:', error);
+                showToast('No s\'ha pogut generar el resum. Verifica la consola per a més detalls.', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function showGeminiOutput(text) {
+            // Simple markdown to HTML conversion for lists and bold text
+            let html = text
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold
+                .replace(/^\* (.*$)/gm, '<ul><li>$1</li></ul>') // Lists
+                .replace(/<\/ul>\n<ul>/g, ''); // Join consecutive lists
+            
+            document.getElementById('gemini-output').innerHTML = html;
+            document.getElementById('gemini-modal').classList.remove('hidden');
+        }
+
+        // Load the gapi client on window load
+        window.onload = gapiLoaded;
+    </script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { getAllAvisos, toggleAvisoStatus, deleteAviso } from '../avisosService';
 import AvisoForm from './AvisoForm';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
@@ -19,7 +19,10 @@ const AvisosView = ({ onBackClick, profile, accessToken }) => {
 
   const canManage = profile.role === 'Direcció';
 
-  const fetchAllAvisos = async () => {
+  const fetchAllAvisos = useCallback(async () => {
+    // Only fetch if we have an access token
+    if (!accessToken) return;
+    
     try {
       setLoading(true);
       const allAvisos = await getAllAvisos(accessToken);
@@ -29,11 +32,11 @@ const AvisosView = ({ onBackClick, profile, accessToken }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [accessToken]);
 
   useEffect(() => {
     fetchAllAvisos();
-  }, [accessToken]);
+  }, [accessToken, fetchAllAvisos]);
 
   const handleToggleStatus = async (id) => {
     try {
@@ -45,12 +48,12 @@ const AvisosView = ({ onBackClick, profile, accessToken }) => {
     }
   };
 
-  const handleDeleteClick = (avisoId) => {
+  const handleDeleteClick = useCallback((avisoId) => {
     setAvisoToDelete(avisoId);
     setIsConfirmDialogOpen(true);
-  };
+  }, []);
 
-  const handleConfirmDelete = async () => {
+  const handleConfirmDelete = useCallback(async () => {
     if (avisoToDelete) {
       try {
         await deleteAviso(avisoToDelete, accessToken);
@@ -62,17 +65,17 @@ const AvisosView = ({ onBackClick, profile, accessToken }) => {
         setAvisoToDelete(null);
       }
     }
-  };
+  }, [avisoToDelete, accessToken, fetchAllAvisos]);
 
-  const handleCancelDelete = () => {
+  const handleCancelDelete = useCallback(() => {
     setIsConfirmDialogOpen(false);
     setAvisoToDelete(null);
-  };
+  }, []);
 
-  const handleAvisoAdded = () => {
+  const handleAvisoAdded = useCallback(() => {
     setIsFormOpen(false);
     fetchAllAvisos(); // Refresh list after adding a new aviso
-  }
+  }, [fetchAllAvisos]);
 
   return (
     <div className="container mx-auto p-4">
