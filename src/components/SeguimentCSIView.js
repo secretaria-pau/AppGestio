@@ -7,37 +7,11 @@ import { Textarea } from './ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 
 // --- Configuration --- (IMPORTANT: Move to .env file in a real app)
-const API_KEY = 'AIzaSyD69lkn4BcjOaR3DFJZarcQcs8dgT4CYfU'; 
 const SPREADSHEET_ID = '1wlvnGyvwsIReC_1bSkB2wo4UecJPNpOTs2ksB2n8Iqc';
-const GEMINI_API_KEY = 'AIzaSyDHLqY0bxDKJPS7hmVY1zTmzlivK5f4OhQ'; // SECURITY RISK: Should be on a backend
+
+const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxwxgPgUDZhUa-U9wlK51_1tMxbwphh3olG4C8ObI55W3HoHpiKZMftEJF9_vXa2OCB/exec'; // TODO: Replace with your actual deployed GAS Web App URL
 
 // --- Helper Hooks & Functions ---
-const useGapi = (accessToken) => {
-    const [isGapiReady, setIsGapiReady] = useState(false);
-    useEffect(() => {
-        const script = document.createElement('script');
-        script.src = 'https://apis.google.com/js/api.js';
-        script.onload = () => {
-            window.gapi.load('client', async () => {
-                try {
-                    await window.gapi.client.init({ apiKey: API_KEY, discoveryDocs: ["https://sheets.googleapis.com/$discovery/rest?version=v4"] });
-                    setIsGapiReady(true);
-                } catch (error) { console.error("Error initializing GAPI client", error); }
-            });
-        };
-        document.body.appendChild(script);
-        return () => { document.body.removeChild(script); };
-    }, []);
-
-    useEffect(() => {
-        if (isGapiReady && accessToken) {
-            window.gapi.client.setToken({ access_token: accessToken });
-        }
-    }, [isGapiReady, accessToken]);
-
-    return isGapiReady;
-};
-
 const formatDate = (dateInput) => {
     if (!dateInput) return '';
     const date = new Date(dateInput);
@@ -47,10 +21,10 @@ const formatDate = (dateInput) => {
 
 // --- Main Component ---
 const SeguimentCSIView = ({ onBackClick, accessToken, profile }) => {
-    const isGapiReady = useGapi(accessToken);
     const [currentTab, setCurrentTab] = useState('grups');
     const [loading, setLoading] = useState(true);
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+    const [error, setError] = useState(null);
 
     // Data State
     const [grups, setGrups] = useState([]);
@@ -68,59 +42,111 @@ const SeguimentCSIView = ({ onBackClick, accessToken, profile }) => {
     const [diariState, setDiariState] = useState({ curs: '', ensenyament: '', data: new Date().toISOString().split('T')[0], rows: [], alumneToDuplicate: '' });
     const [geminiModal, setGeminiModal] = useState({ show: false, content: '' });
 
-    const showToast = (message, type = 'success') => {
+    const showToast = useCallback((message, type = 'success') => {
         setToast({ show: true, message, type });
         setTimeout(() => setToast(prev => ({ ...prev, show: false })), 3000);
-    };
-
-    const fetchData = useCallback(async (sheetName) => {
-        try {
-            const res = await window.gapi.client.sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: sheetName });
-            const rows = res.result.values || [];
-            if (rows.length < 1) return [];
-            const headers = rows.shift();
-            return rows.map(row => headers.reduce((obj, header, index) => ({ ...obj, [header]: row[index] || '' }), {}));
-        } catch (err) {
-            console.error(`Error fetching ${sheetName}:`, err);
-            showToast(`Error carregant ${sheetName}: ${err.result?.error?.message || 'Error desconegut'}`, 'error');
-            return [];
-        }
     }, []);
 
-    const postData = async (sheetName, data) => {
+    const fetchData = useCallback((sheetName) => {
+        return new Promise((resolve, reject) => {
+            const callbackName = `jsonp_callback_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+            window[callbackName] = (response) => {
+                delete window[callbackName];
+                script.remove();
+                if (response.error) {
+                    reject(new Error(response.error));
+                } else {
+                    resolve(response.data);
+                }
+            };
+
+            const script = document.createElement('script');
+            script.src = `${GAS_WEB_APP_URL}?sheetName=${sheetName}&callback=${callbackName}`;
+            script.onerror = () => {
+                delete window[callbackName];
+                script.remove();
+                reject(new Error(`Failed to load script for ${sheetName}`));
+            };
+            document.head.appendChild(script);
+
+            // Set a timeout for the request
+            const timeout = setTimeout(() => {
+                delete window[callbackName];
+                script.remove();
+                reject(new Error(`Request for ${sheetName} timed out.`));
+            }, 30000); // 30 seconds timeout
+        });
+    }, []);
+
+    const initializeApp = async () => {
         setLoading(true);
+        setError(null);
         try {
-            const dataArray = Array.isArray(data) ? data : [data];
-            if (dataArray.length === 0) return { success: true };
-            const headerResponse = await window.gapi.client.sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: `${sheetName}!1:1` });
-            const headers = headerResponse.result.values[0];
-            const valuesToAppend = dataArray.map(obj => headers.map(header => obj[header] || ""));
-            await window.gapi.client.sheets.spreadsheets.values.append({ spreadsheetId: SPREADSHEET_ID, range: `${sheetName}!A1`, valueInputOption: 'USER_ENTERED', insertDataOption: 'INSERT_ROWS', resource: { values: valuesToAppend } });
-            return { success: true };
+            console.log("CSI View: Initializing app in parallel...");
+
+            const [g, a, m, an] = await Promise.all([
+                fetchData('Grups'),
+                fetchData('Alumnes'),
+                fetchData('Matrícules'),
+                fetchData('Anotacions')
+            ]);
+
+            setGrups(g);
+            console.log("CSI View: Fetched Grups.", g);
+            setAlumnes(a);
+            console.log("CSI View: Fetched Alumnes.", a);
+            setMatricules(m);
+            console.log("CSI View: Fetched Matrícules.", m);
+            setAnotacions(an);
+            console.log("CSI View: Fetched Anotacions.", an);
+
+            console.log("CSI View: All data fetched in parallel.");
         } catch (err) {
-            console.error(`Error posting to ${sheetName}:`, err);
-            showToast(`Error desant dades: ${err.result?.error?.message || 'Error desconegut'}`, 'error');
-            return { success: false };
+            console.error("CSI View: Error initializing app:", err);
+            setError(err);
         } finally {
             setLoading(false);
         }
     };
 
-    useEffect(() => {
-        // Only initialize the app if we have an access token, GAPI is ready, and we have a profile
-        if (isGapiReady && accessToken && profile) {
-            const initializeApp = async () => {
-                setLoading(true);
-                const [g, a, m, an] = await Promise.all([fetchData('Grups'), fetchData('Alumnes'), fetchData('Matrícules'), fetchData('Anotacions')]);
-                setGrups(g);
-                setAlumnes(a);
-                setMatricules(m);
-                setAnotacions(an);
-                setLoading(false);
+    const postData = useCallback((sheetName, data) => {
+        return new Promise((resolve, reject) => {
+            const callbackName = `jsonp_callback_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+            window[callbackName] = (response) => {
+                delete window[callbackName];
+                script.remove();
+                if (response.success === false) {
+                    reject(new Error(response.error));
+                } else {
+                    resolve(response);
+                }
             };
+
+            const payload = encodeURIComponent(JSON.stringify(data));
+            const script = document.createElement('script');
+            script.src = `${GAS_WEB_APP_URL}?sheetName=${sheetName}&payload=${payload}&callback=${callbackName}&method=POST`; // GAS doPost expects method=POST
+            script.onerror = () => {
+                delete window[callbackName];
+                script.remove();
+                reject(new Error(`Failed to load script for ${sheetName}`));
+            };
+            document.head.appendChild(script);
+
+            // Set a timeout for the request
+            const timeout = setTimeout(() => {
+                delete window[callbackName];
+                script.remove();
+                reject(new Error(`Request for ${sheetName} timed out.`));
+            }, 30000); // 30 seconds timeout
+        });
+    }, []);
+
+    useEffect(() => {
+        // Only initialize the app if we have an access token and a profile
+        if (accessToken && profile) {
             initializeApp();
         }
-    }, [isGapiReady, accessToken, profile, fetchData]);
+    }, [accessToken, profile]);
 
     // --- Event Handlers ---
     const handleAddGrup = async (e) => {
@@ -196,21 +222,68 @@ const SeguimentCSIView = ({ onBackClick, accessToken, profile }) => {
     };
 
     const handleGeminiClick = async () => {
+        const generateSummaryWithGAS = (prompt) => {
+            return new Promise((resolve, reject) => {
+                const callbackName = `jsonp_callback_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+                let script; // Define script tag here to access it in the timeout
+
+                window[callbackName] = (response) => {
+                    clearTimeout(timeout);
+                    delete window[callbackName];
+                    if (script && script.parentNode) {
+                        script.parentNode.removeChild(script);
+                    }
+                    if (response.error) {
+                        reject(new Error(response.error));
+                    } else {
+                        resolve(response.text);
+                    }
+                };
+
+                script = document.createElement('script');
+                const params = new URLSearchParams({
+                    action: 'generateGeminiContent',
+                    prompt: prompt,
+                    callback: callbackName
+                });
+                // Use encodeURIComponent for the prompt to handle special characters
+                script.src = `${GAS_WEB_APP_URL}?action=generateGeminiContent&callback=${callbackName}&prompt=${encodeURIComponent(prompt)}`;
+                
+                script.onerror = () => {
+                    clearTimeout(timeout);
+                    delete window[callbackName];
+                    if (script && script.parentNode) {
+                        script.parentNode.removeChild(script);
+                    }
+                    reject(new Error('Failed to load GAS script for Gemini summary.'));
+                };
+                
+                const timeout = setTimeout(() => {
+                    delete window[callbackName];
+                    if (script && script.parentNode) {
+                        script.parentNode.removeChild(script);
+                    }
+                    reject(new Error('Request for Gemini summary timed out.'));
+                }, 60000); // 60 seconds timeout for AI generation
+
+                document.head.appendChild(script);
+            });
+        };
+
         const { alumne } = anotacionsFilters;
         if (!alumne) { showToast("Selecciona un alumne per generar el resum.", "error"); return; }
         const anotacionsPerResum = filteredAnotacions.filter(a => a.Alumne === alumne);
         if (anotacionsPerResum.length === 0) { showToast("No hi ha anotacions per a generar el resum.", "error"); return; }
         setLoading(true);
         try {
-            const prompt = `Ets un tutor expert. Basant-te en les següents anotacions sobre l'alumne ${alumne}, fes un resum concís de la seva evolució en format de punts clau i, a continuació, proposa un suggeriment clar i accionable per a la seva millora. Estructura la resposta amb un títol "Resum d'Evolució" i un altre "Suggeriment". Anotacions:\n${anotacionsPerResum.map(a => `${a.Data} (${a.Tipus}): ${a.Anotació}`).join('\n')}`;
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
-            if (!response.ok) throw new Error(await response.text());
-            const result = await response.json();
-            const text = result.candidates[0].content.parts[0].text;
+            const prompt = `Ets un tutor expert. Tingues en compte que els alumnes són persones adultes; els suggeriments han d'anar dirigits a l'alumne mateix, no a la seva família. Basant-te en les següents anotacions sobre l'alumne ${alumne}, fes un resum concís de la seva evolució en format de punts clau i, a continuació, proposa un suggeriment clar i accionable per a la seva millora. Estructura la resposta amb un títol "Resum d'Evolució" i un altre "Suggeriment". Anotacions:\n${anotacionsPerResum.map(a => `${a.Data} (${a.Tipus}): ${a.Anotació}`).join('\n')}`;
+            
+            const text = await generateSummaryWithGAS(prompt);
+
             setGeminiModal({ show: true, content: text });
         } catch (error) {
-            console.error("Error amb l'API de Gemini:", error);
-            showToast("No s'ha pogut generar el resum.", "error");
+            console.error("Error amb la generació de resum via GAS:", error);
+            showToast(`No s'ha pogut generar el resum: ${error.message}`, "error");
         } finally {
             setLoading(false);
         }
@@ -237,7 +310,19 @@ const SeguimentCSIView = ({ onBackClick, accessToken, profile }) => {
         }
     }, [diariState.curs, diariState.ensenyament, matricules]);
 
-    if (!isGapiReady) return <div className="text-center p-8">Carregant API de Google...</div>;
+    // No longer need isGapiReady check as we are using GAS
+    // if (!isGapiReady) return <div className="text-center p-8">Carregant API de Google...</div>;
+
+    if (error) {
+        return (
+            <div className="text-center p-8 bg-red-100 border border-red-400 text-red-700 rounded-lg max-w-md mx-auto mt-10">
+                <h2 className="text-2xl font-bold mb-4">Error en Carregar les Dades</h2>
+                <p className="mb-4">Hi ha hagut un problema en connectar amb Google Sheets. Això pot ser degut a un problema de xarxa o de permisos.</p>
+                <p className="text-sm text-gray-600 mb-6">Detalls: {error.result?.error?.message || error.message || 'Error desconegut'}</p>
+                <Button onClick={() => initializeApp()}>Reintentar</Button>
+            </div>
+        );
+    }
 
     const Badge = ({ type }) => <span className={`badge tipo-${type?.toLowerCase() || 'default'}`}>{type}</span>;
 

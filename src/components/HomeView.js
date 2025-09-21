@@ -11,7 +11,7 @@ const HomeView = ({ onIncidentsClick, onCalendarClick, onGroupsClick, onTICIncid
   const fetchAvisos = useCallback(async () => {
     // Only fetch avisos if we have a valid access token
     if (!accessToken) {
-      console.log("HomeView: No accessToken provided, skipping avisos fetch.");
+      // console.log("HomeView: No accessToken provided, skipping avisos fetch.");
       return;
     }
     try {
@@ -26,6 +26,10 @@ const HomeView = ({ onIncidentsClick, onCalendarClick, onGroupsClick, onTICIncid
       setLoadingAvisos(false);
     }
   }, [accessToken]); // Added profile to dependency array
+
+  useEffect(() => {
+    fetchAvisos();
+  }, [fetchAvisos]);
 
   if (!profile) {
     return <div className="flex h-screen items-center justify-center">Carregant perfil...</div>; // Or a loading spinner
