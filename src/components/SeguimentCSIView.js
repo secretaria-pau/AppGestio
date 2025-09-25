@@ -6,10 +6,13 @@ import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 
+import { isMobile } from '../lib/isMobile';
+import { csiFetchData, csiPostData, csiGenerateSummary } from '../seguimentCSIService';
+
 // --- Configuration --- (IMPORTANT: Move to .env file in a real app)
 const SPREADSHEET_ID = '1wlvnGyvwsIReC_1bSkB2wo4UecJPNpOTs2ksB2n8Iqc';
 
-const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxwxgPgUDZhUa-U9wlK51_1tMxbwphh3olG4C8ObI55W3HoHpiKZMftEJF9_vXa2OCB/exec'; // TODO: Replace with your actual deployed GAS Web App URL
+const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxwxgPgUDZhUa-U9wlK51_1tMxbphh3olG4C8ObI55W3HoHpiKZMftEJF9_vXa2OCB/exec'; // TODO: Replace with your actual deployed GAS Web App URL
 
 // --- Helper Hooks & Functions ---
 const formatDate = (dateInput) => {
@@ -48,35 +51,39 @@ const SeguimentCSIView = ({ onBackClick, accessToken, profile }) => {
     }, []);
 
     const fetchData = useCallback((sheetName) => {
-        return new Promise((resolve, reject) => {
-            const callbackName = `jsonp_callback_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-            window[callbackName] = (response) => {
-                delete window[callbackName];
-                script.remove();
-                if (response.error) {
-                    reject(new Error(response.error));
-                } else {
-                    resolve(response.data);
-                }
-            };
+        if (isMobile()) {
+            return csiFetchData(sheetName, accessToken);
+        } else {
+            return new Promise((resolve, reject) => {
+                const callbackName = `jsonp_callback_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+                window[callbackName] = (response) => {
+                    delete window[callbackName];
+                    script.remove();
+                    if (response.error) {
+                        reject(new Error(response.error));
+                    } else {
+                        resolve(response.data);
+                    }
+                };
 
-            const script = document.createElement('script');
-            script.src = `${GAS_WEB_APP_URL}?sheetName=${sheetName}&callback=${callbackName}`;
-            script.onerror = () => {
-                delete window[callbackName];
-                script.remove();
-                reject(new Error(`Failed to load script for ${sheetName}`));
-            };
-            document.head.appendChild(script);
+                const script = document.createElement('script');
+                script.src = `${GAS_WEB_APP_URL}?sheetName=${sheetName}&callback=${callbackName}`;
+                script.onerror = () => {
+                    delete window[callbackName];
+                    script.remove();
+                    reject(new Error(`Failed to load script for ${sheetName}`));
+                };
+                document.head.appendChild(script);
 
-            // Set a timeout for the request
-            const timeout = setTimeout(() => {
-                delete window[callbackName];
-                script.remove();
-                reject(new Error(`Request for ${sheetName} timed out.`));
-            }, 30000); // 30 seconds timeout
-        });
-    }, []);
+                // Set a timeout for the request
+                const timeout = setTimeout(() => {
+                    delete window[callbackName];
+                    script.remove();
+                    reject(new Error(`Request for ${sheetName} timed out.`));
+                }, 30000); // 30 seconds timeout
+            });
+        }
+    }, [accessToken]);
 
     const initializeApp = async () => {
         setLoading(true);
@@ -85,10 +92,10 @@ const SeguimentCSIView = ({ onBackClick, accessToken, profile }) => {
             console.log("CSI View: Initializing app in parallel...");
 
             const [g, a, m, an] = await Promise.all([
-                fetchData('Grups'),
-                fetchData('Alumnes'),
-                fetchData('Matrícules'),
-                fetchData('Anotacions')
+                csiFetchData('Grups', accessToken),
+                csiFetchData('Alumnes', accessToken),
+                csiFetchData('Matrícules', accessToken),
+                csiFetchData('Anotacions', accessToken)
             ]);
 
             setGrups(g);
@@ -110,36 +117,40 @@ const SeguimentCSIView = ({ onBackClick, accessToken, profile }) => {
     };
 
     const postData = useCallback((sheetName, data) => {
-        return new Promise((resolve, reject) => {
-            const callbackName = `jsonp_callback_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-            window[callbackName] = (response) => {
-                delete window[callbackName];
-                script.remove();
-                if (response.success === false) {
-                    reject(new Error(response.error));
-                } else {
-                    resolve(response);
-                }
-            };
+        if (isMobile()) {
+            return csiPostData(sheetName, data, accessToken);
+        } else {
+            return new Promise((resolve, reject) => {
+                const callbackName = `jsonp_callback_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+                window[callbackName] = (response) => {
+                    delete window[callbackName];
+                    script.remove();
+                    if (response.success === false) {
+                        reject(new Error(response.error));
+                    } else {
+                        resolve(response);
+                    }
+                };
 
-            const payload = encodeURIComponent(JSON.stringify(data));
-            const script = document.createElement('script');
-            script.src = `${GAS_WEB_APP_URL}?sheetName=${sheetName}&payload=${payload}&callback=${callbackName}&method=POST`; // GAS doPost expects method=POST
-            script.onerror = () => {
-                delete window[callbackName];
-                script.remove();
-                reject(new Error(`Failed to load script for ${sheetName}`));
-            };
-            document.head.appendChild(script);
+                const payload = encodeURIComponent(JSON.stringify(data));
+                const script = document.createElement('script');
+                script.src = `${GAS_WEB_APP_URL}?sheetName=${sheetName}&payload=${payload}&callback=${callbackName}&method=POST`; // GAS doPost expects method=POST
+                script.onerror = () => {
+                    delete window[callbackName];
+                    script.remove();
+                    reject(new Error(`Failed to load script for ${sheetName}`));
+                };
+                document.head.appendChild(script);
 
-            // Set a timeout for the request
-            const timeout = setTimeout(() => {
-                delete window[callbackName];
-                script.remove();
-                reject(new Error(`Request for ${sheetName} timed out.`));
-            }, 30000); // 30 seconds timeout
-        });
-    }, []);
+                // Set a timeout for the request
+                const timeout = setTimeout(() => {
+                    delete window[callbackName];
+                    script.remove();
+                    reject(new Error(`Request for ${sheetName} timed out.`));
+                }, 30000); // 30 seconds timeout
+            });
+        }
+    }, [accessToken]);
 
     useEffect(() => {
         // Only initialize the app if we have an access token and a profile
@@ -152,7 +163,7 @@ const SeguimentCSIView = ({ onBackClick, accessToken, profile }) => {
     const handleAddGrup = async (e) => {
         e.preventDefault();
         const newGrup = { 'Curs Acadèmic': e.target.elements.curs.value, 'Ensenyament': e.target.elements.ensenyament.value };
-        if (await postData('Grups', newGrup)) {
+        if (await csiPostData('Grups', newGrup, accessToken)) {
             setGrups(prev => [...prev, newGrup]);
             showToast('Grup afegit correctament!');
             e.target.reset();
@@ -162,7 +173,7 @@ const SeguimentCSIView = ({ onBackClick, accessToken, profile }) => {
     const handleAddAlumne = async (e) => {
         e.preventDefault();
         const newAlumne = { 'Nom': e.target.elements.nom.value };
-        if (await postData('Alumnes', newAlumne)) {
+        if (await csiPostData('Alumnes', newAlumne, accessToken)) {
             setAlumnes(prev => [...prev, newAlumne]);
             showToast('Alumne afegit correctament!');
             e.target.reset();
@@ -174,7 +185,7 @@ const SeguimentCSIView = ({ onBackClick, accessToken, profile }) => {
         if (!selectedAlumne) { showToast("Tria un alumne primer", "error"); return; }
         if (!matriculaForm.curs || !matriculaForm.ensenyament) { showToast("Tria un curs i ensenyament", "error"); return; }
         const newMatricula = { 'Curs': matriculaForm.curs, 'Ensenyament': matriculaForm.ensenyament, 'Alumne': selectedAlumne };
-        if (await postData('Matrícules', newMatricula)) {
+        if (await csiPostData('Matrícules', newMatricula, accessToken)) {
             setMatricules(prev => [...prev, newMatricula]);
             showToast('Alumne matriculat correctament!');
             setMatriculaForm({ curs: '', ensenyament: '' });
@@ -186,7 +197,7 @@ const SeguimentCSIView = ({ onBackClick, accessToken, profile }) => {
         const { curs, ensenyament, alumne } = anotacionsFilters;
         if (!curs || !ensenyament || !alumne) { showToast("Cal seleccionar curs, ensenyament i alumne als filtres.", "error"); return; }
         const newAnotacio = { 'Ensenyament': ensenyament, 'Alumne': alumne, 'Data': anotacioForm.data, 'Tipus': anotacioForm.tipus, 'Anotació': anotacioForm.anotacio };
-        if (await postData('Anotacions', newAnotacio)) {
+        if (await csiPostData('Anotacions', newAnotacio, accessToken)) {
             setAnotacions(prev => [...prev, newAnotacio]);
             showToast("Anotació afegida correctament!");
             setAnotacioForm(prev => ({ ...prev, anotacio: '' }));
@@ -197,7 +208,7 @@ const SeguimentCSIView = ({ onBackClick, accessToken, profile }) => {
         e.preventDefault();
         if (!selectedMatricula) { return; }
         const newAnotacio = { ...selectedMatricula, 'Data': e.target.elements.data.value, 'Tipus': e.target.elements.tipus.value, 'Anotació': e.target.elements.anotacio.value };
-        if (await postData('Anotacions', newAnotacio)) {
+        if (await csiPostData('Anotacions', newAnotacio, accessToken)) {
             setAnotacions(prev => [...prev, newAnotacio]);
             showToast("Anotació afegida correctament!");
             e.target.reset();
@@ -209,7 +220,7 @@ const SeguimentCSIView = ({ onBackClick, accessToken, profile }) => {
         if (!curs || !ensenyament || !data) { showToast("Selecciona curs, ensenyament i data", 'error'); return; }
         const novesAnotacions = diariState.rows.filter(row => row.anotacio.trim() !== '').map(row => ({ 'Ensenyament': ensenyament, 'Alumne': row.alumne, 'Data': data, 'Tipus': row.tipus, 'Anotació': row.anotacio.trim() }));
         if (novesAnotacions.length === 0) { showToast("No hi ha cap anotació per guardar.", 'error'); return; }
-        if (await postData('Anotacions', novesAnotacions)) {
+        if (await csiPostData('Anotacions', novesAnotacions, accessToken)) {
             setAnotacions(prev => [...prev, ...novesAnotacions]);
             showToast(`${novesAnotacions.length} anotacions guardades!`);
             setDiariState(prev => ({ ...prev, rows: prev.rows.map(r => ({ ...r, anotacio: '' })) }));
@@ -223,51 +234,56 @@ const SeguimentCSIView = ({ onBackClick, accessToken, profile }) => {
 
     const handleGeminiClick = async () => {
         const generateSummaryWithGAS = (prompt) => {
-            return new Promise((resolve, reject) => {
-                const callbackName = `jsonp_callback_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-                let script; // Define script tag here to access it in the timeout
+            if (isMobile()) {
+                return csiGenerateSummary(prompt, accessToken);
+            } else {
+                return new Promise((resolve, reject) => {
+                    const callbackName = `jsonp_callback_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+                    let script; // Define script tag here to access it in the timeout
 
-                window[callbackName] = (response) => {
-                    clearTimeout(timeout);
-                    delete window[callbackName];
-                    if (script && script.parentNode) {
-                        script.parentNode.removeChild(script);
-                    }
-                    if (response.error) {
-                        reject(new Error(response.error));
-                    } else {
-                        resolve(response.text);
-                    }
-                };
+                    window[callbackName] = (response) => {
+                        clearTimeout(timeout);
+                        delete window[callbackName];
+                        if (script && script.parentNode) {
+                            script.parentNode.removeChild(script);
+                        }
+                        if (response.error) {
+                            reject(new Error(response.error));
+                        }
+                        else {
+                            resolve(response.text);
+                        }
+                    };
 
-                script = document.createElement('script');
-                const params = new URLSearchParams({
-                    action: 'generateGeminiContent',
-                    prompt: prompt,
-                    callback: callbackName
+                    script = document.createElement('script');
+                    const params = new URLSearchParams({
+                        action: 'generateGeminiContent',
+                        prompt: prompt,
+                        callback: callbackName
+                    });
+                    // Use encodeURIComponent for the prompt to handle special characters
+                    script.src = `${GAS_WEB_APP_URL}?action=generateGeminiContent&callback=${callbackName}&prompt=${encodeURIComponent(prompt)}`;
+                    
+                    script.onerror = () => {
+                        clearTimeout(timeout);
+                        delete window[callbackName];
+                        if (script && script.parentNode) {
+                            script.parentNode.removeChild(script);
+                        }
+                        reject(new Error('Failed to load GAS script for Gemini summary.'));
+                    };
+                    
+                    const timeout = setTimeout(() => {
+                        delete window[callbackName];
+                        if (script && script.parentNode) {
+                            script.parentNode.removeChild(script);
+                        }
+                        reject(new Error(`Request for Gemini summary timed out.`));
+                    }, 60000); // 60 seconds timeout for AI generation
+
+                    document.head.appendChild(script);
                 });
-                // Use encodeURIComponent for the prompt to handle special characters
-                script.src = `${GAS_WEB_APP_URL}?action=generateGeminiContent&callback=${callbackName}&prompt=${encodeURIComponent(prompt)}`;
-                
-                script.onerror = () => {
-                    clearTimeout(timeout);
-                    delete window[callbackName];
-                    if (script && script.parentNode) {
-                        script.parentNode.removeChild(script);
-                    }
-                    reject(new Error('Failed to load GAS script for Gemini summary.'));
-                };
-                
-                const timeout = setTimeout(() => {
-                    delete window[callbackName];
-                    if (script && script.parentNode) {
-                        script.parentNode.removeChild(script);
-                    }
-                    reject(new Error('Request for Gemini summary timed out.'));
-                }, 60000); // 60 seconds timeout for AI generation
-
-                document.head.appendChild(script);
-            });
+            }
         };
 
         const { alumne } = anotacionsFilters;

@@ -45,19 +45,19 @@ const AddIncidentForm = ({
   const [selectedTypeUnit, setSelectedTypeUnit] = useState('H'); // Default to Hours
 
   useEffect(() => {
-    console.log("AddIncidentForm: useEffect triggered", { incidentToEdit, profile, incidentTypes, users });
+    // console.log("AddIncidentForm: useEffect triggered", { incidentToEdit, profile, incidentTypes, users });
 
     // Asegurarse de que todas las dependencias estén disponibles
     if (!profile || !users || users.length === 0 || !incidentTypes || incidentTypes.length === 0) {
-        console.log("AddIncidentForm: useEffect waiting for dependencies...");
+        // console.log("AddIncidentForm: useEffect waiting for dependencies...");
         return; // Salir temprano si las dependencias no están listas
     }
 
     if (incidentToEdit) {
-      console.log("AddIncidentForm: Processing incidentToEdit data");
-      console.log("AddIncidentForm: incidentToEdit content:", incidentToEdit);
-      console.log("AddIncidentForm: incidentToEdit type:", typeof incidentToEdit);
-      console.log("AddIncidentForm: incidentToEdit isArray:", Array.isArray(incidentToEdit));
+      // console.log("AddIncidentForm: Processing incidentToEdit data");
+      // console.log("AddIncidentForm: incidentToEdit content:", incidentToEdit);
+      // console.log("AddIncidentForm: incidentToEdit type:", typeof incidentToEdit);
+      // console.log("AddIncidentForm: incidentToEdit isArray:", Array.isArray(incidentToEdit));
       
       const mappedData = {
         'Usuari (Email)': (incidentToEdit[0] || '').trim(),
@@ -76,9 +76,9 @@ const AddIncidentForm = ({
         'Observacions': incidentToEdit[13] || '',
       };
       
-      console.log("AddIncidentForm: Editing incident, mapped data:", mappedData);
-      console.log("AddIncidentForm: Usuari value:", mappedData['Usuari (Email)']);
-      console.log("AddIncidentForm: Tipus value:", mappedData['Tipus']);
+      // console.log("AddIncidentForm: Editing incident, mapped data:", mappedData);
+      // console.log("AddIncidentForm: Usuari value:", mappedData['Usuari (Email)']);
+      // console.log("AddIncidentForm: Tipus value:", mappedData['Tipus']);
       
       setIncidentData(mappedData);
       const typeObj = incidentTypes.find(t => t.type === mappedData['Tipus']);
@@ -226,16 +226,16 @@ const AddIncidentForm = ({
 
   return (
     <form onSubmit={handleSubmit} className="p-4">
-      {console.log("AddIncidentForm: Rendering form with incidentData:", incidentData)}
-      {console.log("AddIncidentForm: Available users:", users)}
-      {console.log("AddIncidentForm: Available incidentTypes:", incidentTypes)}
+      {/* console.log("AddIncidentForm: Rendering form with incidentData:", incidentData) */}
+      {/* console.log("AddIncidentForm: Available users:", users) */}
+      {/* console.log("AddIncidentForm: Available incidentTypes:", incidentTypes) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div>
           <label htmlFor="userEmail" className="block text-sm font-medium text-gray-700 mb-1">Usuari (Email)</label>
-          {console.log("AddIncidentForm: User field value:", incidentData['Usuari (Email)'])}
-          {console.log("AddIncidentForm: User field disabled:", profile?.role === 'Usuari')}
-          {console.log("AddIncidentForm: Available users:", users)}
-          {console.log("AddIncidentForm: Matching user found:", users.find(u => u.email === incidentData['Usuari (Email)']))}
+          {/* console.log("AddIncidentForm: User field value:", incidentData['Usuari (Email)']) */}
+          {/* console.log("AddIncidentForm: User field disabled:", profile?.role === 'Usuari') */}
+          {/* console.log("AddIncidentForm: Available users:", users) */}
+          {/* console.log("AddIncidentForm: Matching user found:", users.find(u => u.email === incidentData['Usuari (Email)'])) */}
           <Select
             key={`user-select-${incidentData['Usuari (Email)']}`}
             value={incidentData['Usuari (Email)']}
@@ -243,7 +243,9 @@ const AddIncidentForm = ({
             disabled={profile?.role === 'Usuari'}
           >
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Seleccioneu un usuari" />
+              <div className="flex-1 truncate text-left">
+                <SelectValue placeholder="Seleccioneu un usuari" />
+              </div>
             </SelectTrigger>
             <SelectContent>
               {users.map((user, index) => (
@@ -254,8 +256,8 @@ const AddIncidentForm = ({
         </div>
         <div>
           <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-1">Tipus</label>
-          {console.log("AddIncidentForm: Type field value:", incidentData['Tipus'])}
-          {console.log("AddIncidentForm: Available incidentTypes:", incidentTypes)}
+          {/* console.log("AddIncidentForm: Type field value:", incidentData['Tipus']) */}
+          {/* console.log("AddIncidentForm: Available incidentTypes:", incidentTypes) */}
           <Select
             key={`type-select-${incidentData['Tipus']}`}
             value={incidentData['Tipus']}

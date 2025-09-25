@@ -7,8 +7,8 @@ import { getEvents, deleteEvent, updateEvent } from '../../googleCalendarService
 import { fetchSheetData } from '../../googleSheetsService'; // To get incidents
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 
-import { Button, Alert, AlertDescription, AlertTitle, Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, Card, CardContent, CardHeader, CardTitle } from "../ui";
-import { X, ArrowLeft } from "lucide-react";
+import { Button, Alert, AlertDescription, AlertTitle, Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, Card, CardContent, CardHeader, CardTitle, Input } from "../ui";
+import { X, ArrowLeft, Search } from "lucide-react";
 import moment from 'moment';
 
 const CALENDARS = {
@@ -151,12 +151,14 @@ function CalendarMainView({ onBackClick, accessToken, profile }) {
   const [currentView, setCurrentView] = useState('month');
   const [calendarDate, setCalendarDate] = useState(new Date()); // For navigation
   const [events, setEvents] = useState([]);
+  const [filteredEvents, setFilteredEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null); // For event details/editing
   const [selectedIncident, setSelectedIncident] = useState(null); // For incident details popup
   const [eventToEdit, setEventToEdit] = useState(null); // To pass to the form
   const [isFormOpen, setIsFormOpen] = useState(false); // Controls the event form modal
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const minTime = new Date();
   minTime.setHours(8, 0, 0);
@@ -225,6 +227,21 @@ function CalendarMainView({ onBackClick, accessToken, profile }) {
     }
   }, [accessToken, profile, activeCalendar, calendarDate, currentView]);
 
+  // Filter events based on search term
+  useEffect(() => {
+    if (!searchTerm) {
+      setFilteredEvents(events);
+    } else {
+      const lowercasedSearchTerm = searchTerm.toLowerCase();
+      const filtered = events.filter(event => 
+        event.title.toLowerCase().includes(lowercasedSearchTerm) ||
+        (event.description && event.description.toLowerCase().includes(lowercasedSearchTerm)) ||
+        (event.location && event.location.toLowerCase().includes(lowercasedSearchTerm))
+      );
+      setFilteredEvents(filtered);
+    }
+  }, [events, searchTerm]);
+
   useEffect(() => {
     // Only fetch calendar data if we have an access token and a profile
     if (accessToken && profile) {
@@ -276,22 +293,17 @@ function CalendarMainView({ onBackClick, accessToken, profile }) {
         </Alert>
       )}
 
-      <Card className="my-4">
-        <CardHeader>
-          <CardTitle>Controls del Calendari</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <CalendarToolbar 
-            calendars={CALENDARS}
-            activeCalendar={activeCalendar}
-            setActiveCalendar={setActiveCalendar}
-            currentView={currentView}
-            setCurrentView={setCurrentView}
-            profile={profile}
-            onAddEventClick={handleOpenCreateForm}
-          />
-        </CardContent>
-      </Card>
+      <CalendarToolbar 
+        calendars={CALENDARS}
+        activeCalendar={activeCalendar}
+        setActiveCalendar={setActiveCalendar}
+        currentView={currentView}
+        setCurrentView={setCurrentView}
+        onNavigate={setCalendarDate}
+        date={calendarDate}
+        profile={profile}
+        onAddEventClick={handleOpenCreateForm}
+      />
 
       <EventForm 
         isOpen={isFormOpen}
@@ -318,21 +330,24 @@ function CalendarMainView({ onBackClick, accessToken, profile }) {
             <DialogHeader>
               <DialogTitle>Detall de la Incidència</DialogTitle>
             </DialogHeader>
-            <div className="p-4">
-              <h4 className="text-lg font-semibold mb-2">{selectedIncident.title}</h4>
-              <hr className="mb-2" />
-              <p className="mb-1"><strong>Inici:</strong> {selectedIncident.start.toLocaleString('es-ES')}</p>
-              <p className="mb-1"><strong>Fi:</strong> {selectedIncident.end.toLocaleString('es-ES')}</p>
+            <div className="space-y-4 py-4">
+              <h4 className="text-lg font-semibold">{selectedIncident.title}</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <p><strong>Inici:</strong> {selectedIncident.start.toLocaleString('ca-ES')}</p>
+                <p><strong>Fi:</strong> {selectedIncident.end.toLocaleString('ca-ES')}</p>
+              </div>
               {(profile.role === 'Gestor' || profile.role === 'Direcció') && (
                 <div className="mt-4">
                   <h5 className="text-md font-semibold mb-2">Detalls complets (visible per a Gestor/Direcció)</h5>
-                  {selectedIncident.headers.map((header, index) => {
-                    if (header === 'Esborrat') return null; // Don't show the deleted flag
-                    let content = selectedIncident.rawData[index];
-                    if (content === 'TRUE') content = 'Sí';
-                    if (content === 'FALSE' || content === '') content = 'No';
-                    return <p key={header} className="mb-1"><strong>{header}:</strong> {content}</p>;
-                  })}
+                  <div className="space-y-2">
+                    {selectedIncident.headers.map((header, index) => {
+                      if (header === 'Esborrat') return null; // Don't show the deleted flag
+                      let content = selectedIncident.rawData[index];
+                      if (content === 'TRUE') content = 'Sí';
+                      if (content === 'FALSE' || content === '') content = 'No';
+                      return <p key={header} className="text-sm"><strong>{header}:</strong> {content}</p>;
+                    })}
+                  </div>
                 </div>
               )}
             </div>
@@ -343,22 +358,56 @@ function CalendarMainView({ onBackClick, accessToken, profile }) {
         </Dialog>
       )}
 
+      <Card className="my-4">
+        <CardHeader>
+          <CardTitle>Filtres i Cerca</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="relative">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Cerca esdeveniments..."
+              className="w-full pl-8"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
       {loading ? (
-        <p className="text-center mt-3">Cargando esdeveniments...</p>
+        <p className="text-center mt-3">Carregant esdeveniments...</p>
       ) : (
         <Card>
           <CardContent className="p-2">
-            <CalendarDisplay 
-              events={events} 
-              view={currentView} 
-              date={calendarDate}
-              onView={setCurrentView}
-              onNavigate={setCalendarDate}
-              onSelectEvent={handleSelectEvent}
-              eventPropGetter={eventPropGetter(currentView)}
-              min={minTime}
-              max={maxTime}
-            />
+            <div className="mb-2 text-center text-lg font-semibold">
+              {(() => {
+                const date = new Date(calendarDate);
+                if (currentView === 'day') {
+                  return date.toLocaleDateString('ca-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+                } else if (currentView === 'week') {
+                  const startOfWeek = new Date(date);
+                  startOfWeek.setDate(date.getDate() - date.getDay());
+                  const endOfWeek = new Date(startOfWeek);
+                  endOfWeek.setDate(startOfWeek.getDate() + 6);
+                  return `Setmana del ${startOfWeek.toLocaleDateString('ca-ES', { day: 'numeric', month: 'short' })} - ${endOfWeek.toLocaleDateString('ca-ES', { day: 'numeric', month: 'short', year: 'numeric' })}`;
+                } else {
+                  return date.toLocaleString('ca-ES', { month: 'long', year: 'numeric' });
+                }
+              })()}
+            </div>
+              <CalendarDisplay 
+                events={filteredEvents} 
+                view={currentView} 
+                date={calendarDate}
+                onView={setCurrentView}
+                onNavigate={setCalendarDate}
+                onSelectEvent={handleSelectEvent}
+                eventPropGetter={eventPropGetter(currentView)}
+                min={minTime}
+                max={maxTime}
+              />
           </CardContent>
         </Card>
       )}

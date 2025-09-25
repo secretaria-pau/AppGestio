@@ -6,7 +6,7 @@ import { Textarea } from './ui/textarea';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { X } from "lucide-react";
 
-const AvisoForm = ({ accessToken, onClose, onAvisoAdded }) => {
+const AvisoForm = ({ profile, accessToken, onClose, onAvisoAdded }) => {
   const [titol, setTitol] = useState('');
   const [contingut, setContingut] = useState('');
   const [error, setError] = useState(null);
@@ -24,7 +24,7 @@ const AvisoForm = ({ accessToken, onClose, onAvisoAdded }) => {
 
     try {
       const payload = { Titol: titol, Contingut: contingut };
-      await addAviso(payload, accessToken);
+      await addAviso(payload, profile, accessToken);
       alert('Avís afegit correctament!');
       onAvisoAdded(); // This will refresh the list in the parent component
     } catch (err) {

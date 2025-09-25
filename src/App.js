@@ -181,7 +181,7 @@ function App() {
   };
 
   const handleEditClick = (incidentData, originalSheetRowIndex) => {
-    console.log("App.js: handleEditClick called with:", { incidentData, originalSheetRowIndex });
+    // console.log("App.js: handleEditClick called with:", { incidentData, originalSheetRowIndex });
     setEditingIncident({ data: incidentData, originalSheetRowIndex: originalSheetRowIndex });
   };
 
@@ -413,7 +413,7 @@ function App() {
 
           {profile && (
             <Tabs defaultValue="list" value={currentView} onValueChange={setCurrentView} className="mt-4">
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 gap-2 mb-4">
                 <TabsTrigger value="list">Incidències de personal</TabsTrigger>
                 <TabsTrigger value="modified">Incidències modificades</TabsTrigger>
                 <TabsTrigger value="summary">Resum Anual</TabsTrigger>
@@ -613,14 +613,14 @@ function App() {
 
           {editingIncident !== null && (
             (() => {
-              console.log("App.js: Rendering AddIncidentForm with editingIncident:", editingIncident);
-              console.log("App.js: editingIncident.data:", editingIncident.data);
-              console.log("App.js: editingIncident.data type:", typeof editingIncident.data);
-              console.log("App.js: editingIncident.data isArray:", Array.isArray(editingIncident.data));
-              if (Array.isArray(editingIncident.data)) {
-                console.log("App.js: editingIncident.data length:", editingIncident.data.length);
-                console.log("App.js: editingIncident.data content:", editingIncident.data);
-              }
+              // console.log("App.js: Rendering AddIncidentForm with editingIncident:", editingIncident);
+              // console.log("App.js: editingIncident.data:", editingIncident.data);
+              // console.log("App.js: editingIncident.data type:", typeof editingIncident.data);
+              // console.log("App.js: editingIncident.data isArray:", Array.isArray(editingIncident.data));
+              // if (Array.isArray(editingIncident.data)) {
+              //   console.log("App.js: editingIncident.data length:", editingIncident.data.length);
+              //   console.log("App.js: editingIncident.data content:", editingIncident.data);
+              // }
               return (
                 <Dialog open={editingIncident !== null} onOpenChange={handleCloseForm}>
                   <DialogContent className="sm:max-w-[600px]">
@@ -677,7 +677,7 @@ function App() {
       case 'manteniment-incidents':
         return <MantenimentView onBackClick={() => setCurrentScreen('home')} profile={profile} accessToken={accessToken} users={users} />;
       case 'seguiment-csi':
-        return <SeguimentCSIView onBackClick={() => setCurrentScreen('home')} />;
+        return <SeguimentCSIView onBackClick={() => setCurrentScreen('home')} accessToken={accessToken} profile={profile} />;
       
       default:
         return <LoginView onLogin={login} error={error} />;

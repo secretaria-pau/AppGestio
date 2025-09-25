@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { getMantenimentIncidents, addMantenimentIncident, updateMantenimentIncident, exportMantenimentPendingIncidents } from '../googleServices';
+import { getIncidents as getMantenimentIncidents, addIncident as addMantenimentIncident, updateIncident as updateMantenimentIncident } from '../mantenimentService';
+import { exportMantenimentPendingIncidents } from '../googleServices'; // Keep export on the old service for now
 import { Button } from './ui/button';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter, CardDescription } from './ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from './ui/dialog';
@@ -20,30 +21,26 @@ const MantenimentView = ({ onBackClick, profile, accessToken, users }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    // Only fetch incidents if we have an access token
-    if (accessToken) {
-        fetchIncidents();
-    }
-  }, [accessToken, fetchIncidents]);
-
   const fetchIncidents = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await getMantenimentIncidents(accessToken);
-      if (response.status === 'success') {
-        setIncidents(response.data);
-        setFilteredIncidents(response.data);
-      } else {
-        setError(response.message);
-      }
+      const data = await getMantenimentIncidents(accessToken);
+      setIncidents(data);
+      setFilteredIncidents(data);
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
   }, [accessToken]);
+
+  useEffect(() => {
+    // Only fetch incidents if we have an access token
+    if (accessToken) {
+        fetchIncidents();
+    }
+  }, [accessToken, fetchIncidents]);
 
   const filteredIncidentsMemo = useMemo(() => {
     const lowercasedFilter = searchTerm.toLowerCase();
@@ -74,19 +71,14 @@ const MantenimentView = ({ onBackClick, profile, accessToken, users }) => {
     setLoading(true);
     setError(null);
     try {
-      let response;
       if (editingIncident.ID) {
-        response = await updateMantenimentIncident(editingIncident, accessToken);
+        await updateMantenimentIncident(editingIncident, accessToken);
       } else {
-        response = await addMantenimentIncident(editingIncident, accessToken);
+        await addMantenimentIncident(editingIncident, accessToken);
       }
-
-      if (response.status === 'success') {
-        fetchIncidents();
-        setEditingIncident(null); // Close modal on success
-      } else {
-        setError(response.message);
-      }
+      // On success, refetch incidents and close modal
+      fetchIncidents();
+      setEditingIncident(null);
     } catch (err) {
       setError(err.message);
     } finally {

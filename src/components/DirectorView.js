@@ -12,13 +12,13 @@ import { X, ArrowLeft, BookOpen, MessageSquare, Users } from "lucide-react";
 const DirectorView = ({ config, classrooms, teachers, onSyncLists, onUpdateStudents, onUpdateTeachers, onSyncMembers, loading, accessToken, loadData, profile, onBackClick }) => {
   // Log classrooms prop on initial render and updates
   useEffect(() => {
-    console.log('DirectorView - classrooms prop:', classrooms);
+    // console.log('DirectorView - classrooms prop:', classrooms);
   }, [classrooms]);
   const [selectedTeacher, setSelectedTeacher] = useState('');
   const [editingClassroom, setEditingClassroom] = useState(null);
 
   const filteredClassrooms = (() => {
-    console.log('Filtering with selectedTeacher (inside filteredClassrooms):', selectedTeacher);
+    // console.log('Filtering with selectedTeacher (inside filteredClassrooms):', selectedTeacher);
     let result;
     if (selectedTeacher === '') {
       result = classrooms;
@@ -27,7 +27,7 @@ const DirectorView = ({ config, classrooms, teachers, onSyncLists, onUpdateStude
         return teachers.some(teacher => teacher.email === selectedTeacher && teacher.classroomName === classroom.name);
       });
     }
-    console.log('filteredClassrooms result:', result);
+    // console.log('filteredClassrooms result:', result);
     return result;
   })();
 
@@ -98,7 +98,7 @@ const DirectorView = ({ config, classrooms, teachers, onSyncLists, onUpdateStude
         
 
         <Select value={selectedTeacher} onValueChange={(value) => {
-          console.log('Selected Teacher (onValueChange):', value);
+          // console.log('Selected Teacher (onValueChange):', value);
           setSelectedTeacher(value);
         }}>
           <SelectTrigger className="w-[240px]">

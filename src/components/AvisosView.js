@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { getAllAvisos, toggleAvisoStatus, deleteAviso } from '../avisosService';
+import { getAvisos, toggleAvisoStatus, deleteAviso } from '../avisosService';
 import AvisoForm from './AvisoForm';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
 import { Button } from './ui/button';
@@ -25,7 +25,7 @@ const AvisosView = ({ onBackClick, profile, accessToken }) => {
     
     try {
       setLoading(true);
-      const allAvisos = await getAllAvisos(accessToken);
+      const allAvisos = await getAvisos(accessToken, false); // Get all avisos
       setAvisos(allAvisos);
     } catch (err) {
       setError(err.message);
@@ -40,13 +40,20 @@ const AvisosView = ({ onBackClick, profile, accessToken }) => {
 
   const handleToggleStatus = async (id) => {
     try {
-      await toggleAvisoStatus(id, accessToken);
+      await toggleAvisoStatus(id, profile, accessToken);
       // Refresh the list to show the new status
       fetchAllAvisos(); 
     } catch (err) {
       alert(`Error al canviar l'estat: ${err.message}`);
     }
   };
+
+
+
+  const handleAvisoAdded = useCallback(() => {
+    setIsFormOpen(false);
+    fetchAllAvisos(); // Refresh list after adding a new aviso
+  }, [fetchAllAvisos]);
 
   const handleDeleteClick = useCallback((avisoId) => {
     setAvisoToDelete(avisoId);
@@ -56,26 +63,21 @@ const AvisosView = ({ onBackClick, profile, accessToken }) => {
   const handleConfirmDelete = useCallback(async () => {
     if (avisoToDelete) {
       try {
-        await deleteAviso(avisoToDelete, accessToken);
+        await deleteAviso(avisoToDelete, profile, accessToken);
         fetchAllAvisos(); // Refresh the list after deletion
       } catch (err) {
-        alert(`Error al eliminar l'avís: ${err.message}`);
+        alert(`Error al eliminar l\'avís: ${err.message}`);
       } finally {
         setIsConfirmDialogOpen(false);
         setAvisoToDelete(null);
       }
     }
-  }, [avisoToDelete, accessToken, fetchAllAvisos]);
+  }, [avisoToDelete, profile, accessToken, fetchAllAvisos]);
 
   const handleCancelDelete = useCallback(() => {
     setIsConfirmDialogOpen(false);
     setAvisoToDelete(null);
   }, []);
-
-  const handleAvisoAdded = useCallback(() => {
-    setIsFormOpen(false);
-    fetchAllAvisos(); // Refresh list after adding a new aviso
-  }, [fetchAllAvisos]);
 
   return (
     <div className="container mx-auto p-4">
@@ -115,6 +117,7 @@ const AvisosView = ({ onBackClick, profile, accessToken }) => {
           </CardHeader>
           <CardContent>
             <AvisoForm
+              profile={profile}
               accessToken={accessToken}
               onClose={() => setIsFormOpen(false)}
               onAvisoAdded={handleAvisoAdded}
@@ -122,8 +125,6 @@ const AvisosView = ({ onBackClick, profile, accessToken }) => {
           </CardContent>
         </Card>
       )}
-
-      
 
       {/* Confirmation Dialog for Deletion */}
       <AlertDialog open={isConfirmDialogOpen} onOpenChange={setIsConfirmDialogOpen}>
@@ -142,6 +143,10 @@ const AvisosView = ({ onBackClick, profile, accessToken }) => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      
+
+
 
       {loading ? (
         <p>Carregant avisos...</p>
@@ -193,6 +198,7 @@ const AvisosView = ({ onBackClick, profile, accessToken }) => {
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
+
                         </div>
                       )}
                     </TableCell>

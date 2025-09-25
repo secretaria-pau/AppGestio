@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { getTICIncidents, addTICIncident, updateTICIncident, exportTICPendingIncidents } from '../googleServices';
+import { getIncidents as getTICIncidents, addIncident as addTICIncident, updateIncident as updateTICIncident } from '../ticIncidentsService';
+import { exportTICPendingIncidents } from '../googleServices'; // Keep export on the old service for now
 import { Button } from './ui/button';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter, CardDescription } from './ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from './ui/dialog';
@@ -28,14 +29,11 @@ const TICIncidentsView = ({ onBackClick, profile, accessToken, users }) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await getTICIncidents(accessToken);
-      if (response.status === 'success') {
-        setIncidents(response.data);
-        setFilteredIncidents(response.data);
-      } else {
-        setError(response.message);
-      }
+      const data = await getTICIncidents(accessToken);
+      setIncidents(data);
+      setFilteredIncidents(data);
     } catch (err) {
+      console.error("Error fetching TIC incidents:", err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -71,19 +69,14 @@ const TICIncidentsView = ({ onBackClick, profile, accessToken, users }) => {
     setLoading(true);
     setError(null);
     try {
-      let response;
       if (editingIncident.ID) {
-        response = await updateTICIncident(editingIncident, accessToken);
+        await updateTICIncident(editingIncident, accessToken);
       } else {
-                response = await addTICIncident(editingIncident, accessToken);
+        await addTICIncident(editingIncident, accessToken);
       }
-
-      if (response.status === 'success') {
-        fetchIncidents();
-        setEditingIncident(null); // Close modal on success
-      } else {
-        setError(response.message);
-      }
+      // On success, refetch incidents and close modal
+      fetchIncidents();
+      setEditingIncident(null);
     } catch (err) {
       setError(err.message);
     } finally {

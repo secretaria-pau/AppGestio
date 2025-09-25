@@ -24,7 +24,7 @@ const EventDetailModal = ({ event, onClose, calendarName, profile, onDelete, onE
     if (!isAllDayEvent) {
       options.timeStyle = 'short';
     }
-    return new Date(date).toLocaleString('es-ES', options);
+    return new Date(date).toLocaleString('ca-ES', options);
   }
 
   // For all-day events, Google's API sets the end date to the morning of the next day.

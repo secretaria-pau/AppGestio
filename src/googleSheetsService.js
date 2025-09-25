@@ -56,9 +56,10 @@ export const getUserProfile = async (email, accessToken) => {
   }
 };
 
-export const fetchSheetData = async (range, accessToken) => {
+export const fetchSheetData = async (range, accessToken, spreadsheetId) => {
+  const sheetId = spreadsheetId || SPREADSHEET_ID;
   try {
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}`;
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}`;
     const response = await fetch(url, {
       headers: {
         'Authorization': `Bearer ${accessToken}`,
@@ -73,9 +74,10 @@ export const fetchSheetData = async (range, accessToken) => {
   }
 };
 
-export const appendSheetData = async (range, values, accessToken) => {
+export const appendSheetData = async (range, values, accessToken, spreadsheetId) => {
+  const sheetId = spreadsheetId || SPREADSHEET_ID;
   try {
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}:append?valueInputOption=USER_ENTERED`;
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}:append?valueInputOption=USER_ENTERED`;
     const response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -92,9 +94,10 @@ export const appendSheetData = async (range, values, accessToken) => {
   }
 }; 
 
-export const updateSheetData = async (range, values, accessToken) => {
+export const updateSheetData = async (range, values, accessToken, spreadsheetId) => {
+  const sheetId = spreadsheetId || SPREADSHEET_ID;
   try {
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}?valueInputOption=RAW`;
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}?valueInputOption=RAW`;
     const response = await fetch(url, {
       method: 'PUT',
       headers: {

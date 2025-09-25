@@ -143,11 +143,11 @@ const MyGroupsView = ({ onBackClick, accessToken, profile }) => {
 
     try {
       // 1. Iniciar la sincronització de forma asíncrona (deixa una senyal)
-      console.log("Iniciant sincronització de membres asíncronament...");
+      // console.log("Iniciant sincronització de membres asíncronament...");
       const response = await callGASFunctionAsync('iniciarSincronitzacioMembresAsync', accessToken);
       
       if (response && response.success) {
-        console.log("Sincronització iniciada correctament. Començant polling...");
+        // console.log("Sincronització iniciada correctament. Començant polling...");
         alert(`Sincronització de membres iniciada. Comprovant l'estat cada ${POLLING_INTERVAL_MS/1000} segons.`);
       } else {
         throw new Error(response?.message || "Error desconegut en iniciar la sincronització.");
@@ -157,7 +157,7 @@ const MyGroupsView = ({ onBackClick, accessToken, profile }) => {
       let attempts = 0;
       const pollForResult = async () => {
         attempts++;
-        console.log(`Intent de polling ${attempts}/${MAX_ATTEMPTS}...`);
+        // console.log(`Intent de polling ${attempts}/${MAX_ATTEMPTS}...`);
 
         if (attempts > MAX_ATTEMPTS) {
           setError("Temps d'espera exhaurit. La sincronització pot estar encara en curs. Revisa la fulla de càlcul més tard.");
@@ -171,7 +171,7 @@ const MyGroupsView = ({ onBackClick, accessToken, profile }) => {
 
           // Obtenir el valor de la celda de resultats
           const resultCellValue = await getSheetCellValue(RESULT_CELL_RANGE, accessToken);
-          console.log(`Valor de la celda ${RESULT_CELL_RANGE}:`, resultCellValue);
+          // console.log(`Valor de la celda ${RESULT_CELL_RANGE}:`, resultCellValue);
 
           if (resultCellValue && typeof resultCellValue === 'string' && resultCellValue.trim() !== '') {
             // Hem trobat un resultat

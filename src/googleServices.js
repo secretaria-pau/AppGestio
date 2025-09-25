@@ -1,9 +1,9 @@
 const BASE_URL = 'https://sheets.googleapis.com/v4/spreadsheets';
 const SPREADSHEET_ID = '1dpb2AUnUKFOshd3iuaNBpl5hKYyHNLPIoi7I4F7mKWc';
 // IMPORTANT: Replace with your deployed Google Apps Script Web App URL
-const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzCy0orDCIST9J_weub449IdKwWPRKcdn30178M_DI1iEHh_veopShgQUNAodGv2MpEqQ/exec'; 
-const TIC_GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyz12KQE6nTBJlwi6G6nNgTE3HkpofWqH3mAtpZSb4Q54Grnd_i5IzHuR1XV6ymXcOy/exec';
-const MANTENIMENT_GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyRTzEMRIqD-yEZDg4vPlryNbBaskG9GZBgheIJBaF0heEWIcF1N1LbcoiuuYtMvsf4/exec';
+export const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzCy0orDCIST9J_weub449IdKwWPRKcdn30178M_DI1iEHh_veopShgQUNAodGv2MpEqQ/exec'; 
+export const TIC_GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyxFK9BoacQwt-UjM2VoB5UUrjrcKzZogQvBQqG09APRGIjqPshxLiULrHZArB5JEuN/exec';
+export const MANTENIMENT_GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyRTzEMRIqD-yEZDg4vPlryNbBaskG9GZBgheIJBaF0heEWIcF1N1LbcoiuuYtMvsf4/exec';
 
 async function fetchGoogleAPI(url, accessToken, options = {}) {
   const response = await fetch(url, {
