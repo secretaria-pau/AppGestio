@@ -1,0 +1,442 @@
+react refresh:37 Download the React DevTools for a better development experience: https://react.dev/link/react-devtools
+chext_driver.js:539 Initialized driver at: Fri Sep 19 2025 16:23:18 GMT+0200 (hora de verano de Europa central)
+chext_loader.js:73 Initialized chextloader at: 1758291798747
+App.js:184 App.js: handleEditClick called with: {incidentData: Array(14), originalSheetRowIndex: 3}
+App.js:616 App.js: Rendering AddIncidentForm with editingIncident: {data: Array(14), originalSheetRowIndex: 3}
+App.js:617 App.js: editingIncident.data: (14) ['yolanda@cfalapau.cat', '08/09/2025', '18:30', '', '21:00', '2h 30m', '2025', 'Visita mèdica', 'FALSE', '', 'FALSE', '', 'FALSE', 'Visita mèdica']
+App.js:618 App.js: editingIncident.data type: object
+App.js:619 App.js: editingIncident.data isArray: true
+App.js:621 App.js: editingIncident.data length: 14
+App.js:622 App.js: editingIncident.data content: (14) ['yolanda@cfalapau.cat', '08/09/2025', '18:30', '', '21:00', '2h 30m', '2025', 'Visita mèdica', 'FALSE', '', 'FALSE', '', 'FALSE', 'Visita mèdica']
+App.js:616 App.js: Rendering AddIncidentForm with editingIncident: {data: Array(14), originalSheetRowIndex: 3}
+App.js:617 App.js: editingIncident.data: (14) ['yolanda@cfalapau.cat', '08/09/2025', '18:30', '', '21:00', '2h 30m', '2025', 'Visita mèdica', 'FALSE', '', 'FALSE', '', 'FALSE', 'Visita mèdica']
+App.js:618 App.js: editingIncident.data type: object
+App.js:619 App.js: editingIncident.data isArray: true
+App.js:621 App.js: editingIncident.data length: 14
+App.js:622 App.js: editingIncident.data content: (14) ['yolanda@cfalapau.cat', '08/09/2025', '18:30', '', '21:00', '2h 30m', '2025', 'Visita mèdica', 'FALSE', '', 'FALSE', '', 'FALSE', 'Visita mèdica']
+AddIncidentForm.js:228 AddIncidentForm: Rendering form with incidentData: {Usuari (Email): '', Data Inici: '', Hora Inici: '', Data Fi: '', Hora Fi: '', …}
+AddIncidentForm.js:228 AddIncidentForm: Available users: (12) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+AddIncidentForm.js:228 AddIncidentForm: Available incidentTypes: (17) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+AddIncidentForm.js:234 AddIncidentForm: User field value: 
+AddIncidentForm.js:234 AddIncidentForm: User field disabled: false
+AddIncidentForm.js:234 AddIncidentForm: Available users: (12) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+AddIncidentForm.js:234 AddIncidentForm: Matching user found: undefined
+AddIncidentForm.js:255 AddIncidentForm: Type field value: 
+AddIncidentForm.js:255 AddIncidentForm: Available incidentTypes: (17) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+AddIncidentForm.js:228 AddIncidentForm: Rendering form with incidentData: {Usuari (Email): '', Data Inici: '', Hora Inici: '', Data Fi: '', Hora Fi: '', …}
+AddIncidentForm.js:228 AddIncidentForm: Available users: (12) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+AddIncidentForm.js:228 AddIncidentForm: Available incidentTypes: (17) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+AddIncidentForm.js:234 AddIncidentForm: User field value: 
+AddIncidentForm.js:234 AddIncidentForm: User field disabled: false
+AddIncidentForm.js:234 AddIncidentForm: Available users: (12) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+AddIncidentForm.js:234 AddIncidentForm: Matching user found: undefined
+AddIncidentForm.js:255 AddIncidentForm: Type field value: 
+AddIncidentForm.js:255 AddIncidentForm: Available incidentTypes: (17) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+AddIncidentForm.js:48 AddIncidentForm: useEffect triggered {incidentToEdit: Array(14), profile: {…}, incidentTypes: Array(17), users: Array(12)}
+AddIncidentForm.js:57 AddIncidentForm: Processing incidentToEdit data
+AddIncidentForm.js:58 AddIncidentForm: incidentToEdit content: (14) ['yolanda@cfalapau.cat', '08/09/2025', '18:30', '', '21:00', '2h 30m', '2025', 'Visita mèdica', 'FALSE', '', 'FALSE', '', 'FALSE', 'Visita mèdica']
+AddIncidentForm.js:59 AddIncidentForm: incidentToEdit type: object
+AddIncidentForm.js:60 AddIncidentForm: incidentToEdit isArray: true
+AddIncidentForm.js:79 AddIncidentForm: Editing incident, mapped data: {Usuari (Email): 'yolanda@cfalapau.cat', Data Inici: '2025-09-08', Hora Inici: '18:30', Data Fi: '', Hora Fi: '21:00', …}
+AddIncidentForm.js:80 AddIncidentForm: Usuari value: yolanda@cfalapau.cat
+AddIncidentForm.js:81 AddIncidentForm: Tipus value: Visita mèdica
+dialog.jsx:28 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+(anónimo) @ dialog.tsx:543
+react_stack_bottom_frame @ react-dom-client.development.js:23953
+runWithFiberInDEV @ react-dom-client.development.js:1518
+commitHookEffectListMount @ react-dom-client.development.js:11886
+commitHookPassiveMountEffects @ react-dom-client.development.js:12024
+commitPassiveMountOnFiber @ react-dom-client.development.js:13840
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13813
+commitPassiveMountOnFiber @ react-dom-client.development.js:13957
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13813
+commitPassiveMountOnFiber @ react-dom-client.development.js:13834
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13813
+commitPassiveMountOnFiber @ react-dom-client.development.js:13834
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13813
+commitPassiveMountOnFiber @ react-dom-client.development.js:13834
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13813
+commitPassiveMountOnFiber @ react-dom-client.development.js:13834
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13813
+commitPassiveMountOnFiber @ react-dom-client.development.js:13834
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13813
+commitPassiveMountOnFiber @ react-dom-client.development.js:13834
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13813
+commitPassiveMountOnFiber @ react-dom-client.development.js:13834
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13813
+commitPassiveMountOnFiber @ react-dom-client.development.js:13957
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13813
+commitPassiveMountOnFiber @ react-dom-client.development.js:13834
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13813
+commitPassiveMountOnFiber @ react-dom-client.development.js:13834
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13813
+commitPassiveMountOnFiber @ react-dom-client.development.js:13957
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13813
+commitPassiveMountOnFiber @ react-dom-client.development.js:13834
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13813
+commitPassiveMountOnFiber @ react-dom-client.development.js:13834
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13813
+commitPassiveMountOnFiber @ react-dom-client.development.js:13834
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13813
+commitPassiveMountOnFiber @ react-dom-client.development.js:13957
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13813
+commitPassiveMountOnFiber @ react-dom-client.development.js:13834
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13813
+commitPassiveMountOnFiber @ react-dom-client.development.js:13834
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13813
+commitPassiveMountOnFiber @ react-dom-client.development.js:13957
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13813
+commitPassiveMountOnFiber @ react-dom-client.development.js:13957
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13813
+commitPassiveMountOnFiber @ react-dom-client.development.js:13834
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13813
+commitPassiveMountOnFiber @ react-dom-client.development.js:13834
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13813
+commitPassiveMountOnFiber @ react-dom-client.development.js:13834
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13813
+commitPassiveMountOnFiber @ react-dom-client.development.js:13844
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13813
+commitPassiveMountOnFiber @ react-dom-client.development.js:13957
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13813
+commitPassiveMountOnFiber @ react-dom-client.development.js:13834
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13813
+commitPassiveMountOnFiber @ react-dom-client.development.js:13957
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13813
+commitPassiveMountOnFiber @ react-dom-client.development.js:13834
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13813
+commitPassiveMountOnFiber @ react-dom-client.development.js:13834
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13813
+commitPassiveMountOnFiber @ react-dom-client.development.js:13957
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13813
+commitPassiveMountOnFiber @ react-dom-client.development.js:13853
+flushPassiveEffects @ react-dom-client.development.js:15737
+flushPendingEffects @ react-dom-client.development.js:15702
+flushSpawnedWork @ react-dom-client.development.js:15668
+commitRoot @ react-dom-client.development.js:15403
+commitRootWhenReady @ react-dom-client.development.js:14652
+performWorkOnRoot @ react-dom-client.development.js:14575
+performSyncWorkOnRoot @ react-dom-client.development.js:16231
+flushSyncWorkAcrossRoots_impl @ react-dom-client.development.js:16068
+processRootScheduleInMicrotask @ react-dom-client.development.js:16116
+(anónimo) @ react-dom-client.development.js:16245
+<DescriptionWarning>
+exports.jsx @ react-jsx-runtime.development.js:329
+(anónimo) @ dialog.tsx:417
+react_stack_bottom_frame @ react-dom-client.development.js:23863
+renderWithHooksAgain @ react-dom-client.development.js:5629
+renderWithHooks @ react-dom-client.development.js:5541
+updateForwardRef @ react-dom-client.development.js:8645
+beginWork @ react-dom-client.development.js:10861
+runWithFiberInDEV @ react-dom-client.development.js:1518
+performUnitOfWork @ react-dom-client.development.js:15130
+workLoopSync @ react-dom-client.development.js:14956
+renderRootSync @ react-dom-client.development.js:14936
+performWorkOnRoot @ react-dom-client.development.js:14417
+performSyncWorkOnRoot @ react-dom-client.development.js:16231
+flushSyncWorkAcrossRoots_impl @ react-dom-client.development.js:16068
+processRootScheduleInMicrotask @ react-dom-client.development.js:16116
+(anónimo) @ react-dom-client.development.js:16245
+<ForwardRef>
+exports.jsx @ react-jsx-runtime.development.js:329
+(anónimo) @ dialog.tsx:271
+react_stack_bottom_frame @ react-dom-client.development.js:23863
+renderWithHooksAgain @ react-dom-client.development.js:5629
+renderWithHooks @ react-dom-client.development.js:5541
+updateForwardRef @ react-dom-client.development.js:8645
+beginWork @ react-dom-client.development.js:10861
+runWithFiberInDEV @ react-dom-client.development.js:1518
+performUnitOfWork @ react-dom-client.development.js:15130
+workLoopSync @ react-dom-client.development.js:14956
+renderRootSync @ react-dom-client.development.js:14936
+performWorkOnRoot @ react-dom-client.development.js:14417
+performSyncWorkOnRoot @ react-dom-client.development.js:16231
+flushSyncWorkAcrossRoots_impl @ react-dom-client.development.js:16068
+processRootScheduleInMicrotask @ react-dom-client.development.js:16116
+(anónimo) @ react-dom-client.development.js:16245
+<ForwardRef>
+exports.jsx @ react-jsx-runtime.development.js:329
+DialogContent @ dialog.tsx:241
+react_stack_bottom_frame @ react-dom-client.development.js:23863
+renderWithHooksAgain @ react-dom-client.development.js:5629
+renderWithHooks @ react-dom-client.development.js:5541
+updateForwardRef @ react-dom-client.development.js:8645
+beginWork @ react-dom-client.development.js:10861
+runWithFiberInDEV @ react-dom-client.development.js:1518
+performUnitOfWork @ react-dom-client.development.js:15130
+workLoopSync @ react-dom-client.development.js:14956
+renderRootSync @ react-dom-client.development.js:14936
+performWorkOnRoot @ react-dom-client.development.js:14417
+performSyncWorkOnRoot @ react-dom-client.development.js:16231
+flushSyncWorkAcrossRoots_impl @ react-dom-client.development.js:16068
+processRootScheduleInMicrotask @ react-dom-client.development.js:16116
+(anónimo) @ react-dom-client.development.js:16245
+<DialogContent>
+exports.jsxDEV @ react-jsx-dev-runtime.development.js:336
+_c3 @ dialog.jsx:28
+react_stack_bottom_frame @ react-dom-client.development.js:23863
+renderWithHooksAgain @ react-dom-client.development.js:5629
+renderWithHooks @ react-dom-client.development.js:5541
+updateForwardRef @ react-dom-client.development.js:8645
+beginWork @ react-dom-client.development.js:10861
+runWithFiberInDEV @ react-dom-client.development.js:1518
+performUnitOfWork @ react-dom-client.development.js:15130
+workLoopSync @ react-dom-client.development.js:14956
+renderRootSync @ react-dom-client.development.js:14936
+performWorkOnRoot @ react-dom-client.development.js:14417
+performSyncWorkOnRoot @ react-dom-client.development.js:16231
+flushSyncWorkAcrossRoots_impl @ react-dom-client.development.js:16068
+processRootScheduleInMicrotask @ react-dom-client.development.js:16116
+(anónimo) @ react-dom-client.development.js:16245
+<DialogContent>
+exports.jsxDEV @ react-jsx-dev-runtime.development.js:336
+(anónimo) @ App.js:625
+IncidentsView @ App.js:643
+react_stack_bottom_frame @ react-dom-client.development.js:23863
+renderWithHooksAgain @ react-dom-client.development.js:5629
+renderWithHooks @ react-dom-client.development.js:5541
+updateFunctionComponent @ react-dom-client.development.js:8897
+beginWork @ react-dom-client.development.js:10522
+runWithFiberInDEV @ react-dom-client.development.js:1518
+performUnitOfWork @ react-dom-client.development.js:15130
+workLoopSync @ react-dom-client.development.js:14956
+renderRootSync @ react-dom-client.development.js:14936
+performWorkOnRoot @ react-dom-client.development.js:14417
+performSyncWorkOnRoot @ react-dom-client.development.js:16231
+flushSyncWorkAcrossRoots_impl @ react-dom-client.development.js:16068
+processRootScheduleInMicrotask @ react-dom-client.development.js:16116
+(anónimo) @ react-dom-client.development.js:16245
+<IncidentsView>
+exports.jsxDEV @ react-jsx-dev-runtime.development.js:336
+renderScreen @ App.js:668
+App @ App.js:688
+react_stack_bottom_frame @ react-dom-client.development.js:23863
+renderWithHooksAgain @ react-dom-client.development.js:5629
+renderWithHooks @ react-dom-client.development.js:5541
+updateFunctionComponent @ react-dom-client.development.js:8897
+beginWork @ react-dom-client.development.js:10522
+runWithFiberInDEV @ react-dom-client.development.js:1518
+performUnitOfWork @ react-dom-client.development.js:15130
+workLoopSync @ react-dom-client.development.js:14956
+renderRootSync @ react-dom-client.development.js:14936
+performWorkOnRoot @ react-dom-client.development.js:14417
+performSyncWorkOnRoot @ react-dom-client.development.js:16231
+flushSyncWorkAcrossRoots_impl @ react-dom-client.development.js:16068
+processRootScheduleInMicrotask @ react-dom-client.development.js:16116
+(anónimo) @ react-dom-client.development.js:16245
+AddIncidentForm.js:48 AddIncidentForm: useEffect triggered {incidentToEdit: Array(14), profile: {…}, incidentTypes: Array(17), users: Array(12)}
+AddIncidentForm.js:57 AddIncidentForm: Processing incidentToEdit data
+AddIncidentForm.js:58 AddIncidentForm: incidentToEdit content: (14) ['yolanda@cfalapau.cat', '08/09/2025', '18:30', '', '21:00', '2h 30m', '2025', 'Visita mèdica', 'FALSE', '', 'FALSE', '', 'FALSE', 'Visita mèdica']
+AddIncidentForm.js:59 AddIncidentForm: incidentToEdit type: object
+AddIncidentForm.js:60 AddIncidentForm: incidentToEdit isArray: true
+AddIncidentForm.js:79 AddIncidentForm: Editing incident, mapped data: {Usuari (Email): 'yolanda@cfalapau.cat', Data Inici: '2025-09-08', Hora Inici: '18:30', Data Fi: '', Hora Fi: '21:00', …}
+AddIncidentForm.js:80 AddIncidentForm: Usuari value: yolanda@cfalapau.cat
+AddIncidentForm.js:81 AddIncidentForm: Tipus value: Visita mèdica
+dialog.jsx:28 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+(anónimo) @ dialog.tsx:543
+react_stack_bottom_frame @ react-dom-client.development.js:23953
+runWithFiberInDEV @ react-dom-client.development.js:1518
+commitHookEffectListMount @ react-dom-client.development.js:11886
+commitHookPassiveMountEffects @ react-dom-client.development.js:12024
+reconnectPassiveEffects @ react-dom-client.development.js:14004
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:13975
+reconnectPassiveEffects @ react-dom-client.development.js:14051
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:13975
+reconnectPassiveEffects @ react-dom-client.development.js:13997
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:13975
+reconnectPassiveEffects @ react-dom-client.development.js:13997
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:13975
+reconnectPassiveEffects @ react-dom-client.development.js:13997
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:13975
+reconnectPassiveEffects @ react-dom-client.development.js:13997
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:13975
+reconnectPassiveEffects @ react-dom-client.development.js:13997
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:13975
+reconnectPassiveEffects @ react-dom-client.development.js:13997
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:13975
+reconnectPassiveEffects @ react-dom-client.development.js:13997
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:13975
+reconnectPassiveEffects @ react-dom-client.development.js:14051
+doubleInvokeEffectsOnFiber @ react-dom-client.development.js:15964
+runWithFiberInDEV @ react-dom-client.development.js:1518
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15925
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15925
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15925
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15925
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15925
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15925
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15925
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15925
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15925
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15925
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15925
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15925
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15925
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15925
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15925
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15925
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15925
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15925
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15925
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15925
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15925
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15925
+commitDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15977
+flushPassiveEffects @ react-dom-client.development.js:15747
+flushPendingEffects @ react-dom-client.development.js:15702
+flushSpawnedWork @ react-dom-client.development.js:15668
+commitRoot @ react-dom-client.development.js:15403
+commitRootWhenReady @ react-dom-client.development.js:14652
+performWorkOnRoot @ react-dom-client.development.js:14575
+performSyncWorkOnRoot @ react-dom-client.development.js:16231
+flushSyncWorkAcrossRoots_impl @ react-dom-client.development.js:16068
+processRootScheduleInMicrotask @ react-dom-client.development.js:16116
+(anónimo) @ react-dom-client.development.js:16245
+<DescriptionWarning>
+exports.jsx @ react-jsx-runtime.development.js:329
+(anónimo) @ dialog.tsx:417
+react_stack_bottom_frame @ react-dom-client.development.js:23863
+renderWithHooksAgain @ react-dom-client.development.js:5629
+renderWithHooks @ react-dom-client.development.js:5541
+updateForwardRef @ react-dom-client.development.js:8645
+beginWork @ react-dom-client.development.js:10861
+runWithFiberInDEV @ react-dom-client.development.js:1518
+performUnitOfWork @ react-dom-client.development.js:15130
+workLoopSync @ react-dom-client.development.js:14956
+renderRootSync @ react-dom-client.development.js:14936
+performWorkOnRoot @ react-dom-client.development.js:14417
+performSyncWorkOnRoot @ react-dom-client.development.js:16231
+flushSyncWorkAcrossRoots_impl @ react-dom-client.development.js:16068
+processRootScheduleInMicrotask @ react-dom-client.development.js:16116
+(anónimo) @ react-dom-client.development.js:16245
+<ForwardRef>
+exports.jsx @ react-jsx-runtime.development.js:329
+(anónimo) @ dialog.tsx:271
+react_stack_bottom_frame @ react-dom-client.development.js:23863
+renderWithHooksAgain @ react-dom-client.development.js:5629
+renderWithHooks @ react-dom-client.development.js:5541
+updateForwardRef @ react-dom-client.development.js:8645
+beginWork @ react-dom-client.development.js:10861
+runWithFiberInDEV @ react-dom-client.development.js:1518
+performUnitOfWork @ react-dom-client.development.js:15130
+workLoopSync @ react-dom-client.development.js:14956
+renderRootSync @ react-dom-client.development.js:14936
+performWorkOnRoot @ react-dom-client.development.js:14417
+performSyncWorkOnRoot @ react-dom-client.development.js:16231
+flushSyncWorkAcrossRoots_impl @ react-dom-client.development.js:16068
+processRootScheduleInMicrotask @ react-dom-client.development.js:16116
+(anónimo) @ react-dom-client.development.js:16245
+<ForwardRef>
+exports.jsx @ react-jsx-runtime.development.js:329
+DialogContent @ dialog.tsx:241
+react_stack_bottom_frame @ react-dom-client.development.js:23863
+renderWithHooksAgain @ react-dom-client.development.js:5629
+renderWithHooks @ react-dom-client.development.js:5541
+updateForwardRef @ react-dom-client.development.js:8645
+beginWork @ react-dom-client.development.js:10861
+runWithFiberInDEV @ react-dom-client.development.js:1518
+performUnitOfWork @ react-dom-client.development.js:15130
+workLoopSync @ react-dom-client.development.js:14956
+renderRootSync @ react-dom-client.development.js:14936
+performWorkOnRoot @ react-dom-client.development.js:14417
+performSyncWorkOnRoot @ react-dom-client.development.js:16231
+flushSyncWorkAcrossRoots_impl @ react-dom-client.development.js:16068
+processRootScheduleInMicrotask @ react-dom-client.development.js:16116
+(anónimo) @ react-dom-client.development.js:16245
+<DialogContent>
+exports.jsxDEV @ react-jsx-dev-runtime.development.js:336
+_c3 @ dialog.jsx:28
+react_stack_bottom_frame @ react-dom-client.development.js:23863
+renderWithHooksAgain @ react-dom-client.development.js:5629
+renderWithHooks @ react-dom-client.development.js:5541
+updateForwardRef @ react-dom-client.development.js:8645
+beginWork @ react-dom-client.development.js:10861
+runWithFiberInDEV @ react-dom-client.development.js:1518
+performUnitOfWork @ react-dom-client.development.js:15130
+workLoopSync @ react-dom-client.development.js:14956
+renderRootSync @ react-dom-client.development.js:14936
+performWorkOnRoot @ react-dom-client.development.js:14417
+performSyncWorkOnRoot @ react-dom-client.development.js:16231
+flushSyncWorkAcrossRoots_impl @ react-dom-client.development.js:16068
+processRootScheduleInMicrotask @ react-dom-client.development.js:16116
+(anónimo) @ react-dom-client.development.js:16245
+<DialogContent>
+exports.jsxDEV @ react-jsx-dev-runtime.development.js:336
+(anónimo) @ App.js:625
+IncidentsView @ App.js:643
+react_stack_bottom_frame @ react-dom-client.development.js:23863
+renderWithHooksAgain @ react-dom-client.development.js:5629
+renderWithHooks @ react-dom-client.development.js:5541
+updateFunctionComponent @ react-dom-client.development.js:8897
+beginWork @ react-dom-client.development.js:10522
+runWithFiberInDEV @ react-dom-client.development.js:1518
+performUnitOfWork @ react-dom-client.development.js:15130
+workLoopSync @ react-dom-client.development.js:14956
+renderRootSync @ react-dom-client.development.js:14936
+performWorkOnRoot @ react-dom-client.development.js:14417
+performSyncWorkOnRoot @ react-dom-client.development.js:16231
+flushSyncWorkAcrossRoots_impl @ react-dom-client.development.js:16068
+processRootScheduleInMicrotask @ react-dom-client.development.js:16116
+(anónimo) @ react-dom-client.development.js:16245
+<IncidentsView>
+exports.jsxDEV @ react-jsx-dev-runtime.development.js:336
+renderScreen @ App.js:668
+App @ App.js:688
+react_stack_bottom_frame @ react-dom-client.development.js:23863
+renderWithHooksAgain @ react-dom-client.development.js:5629
+renderWithHooks @ react-dom-client.development.js:5541
+updateFunctionComponent @ react-dom-client.development.js:8897
+beginWork @ react-dom-client.development.js:10522
+runWithFiberInDEV @ react-dom-client.development.js:1518
+performUnitOfWork @ react-dom-client.development.js:15130
+workLoopSync @ react-dom-client.development.js:14956
+renderRootSync @ react-dom-client.development.js:14936
+performWorkOnRoot @ react-dom-client.development.js:14417
+performSyncWorkOnRoot @ react-dom-client.development.js:16231
+flushSyncWorkAcrossRoots_impl @ react-dom-client.development.js:16068
+processRootScheduleInMicrotask @ react-dom-client.development.js:16116
+(anónimo) @ react-dom-client.development.js:16245
+AddIncidentForm.js:228 AddIncidentForm: Rendering form with incidentData: {Usuari (Email): 'yolanda@cfalapau.cat', Data Inici: '2025-09-08', Hora Inici: '18:30', Data Fi: '', Hora Fi: '21:00', …}
+AddIncidentForm.js:228 AddIncidentForm: Available users: (12) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+AddIncidentForm.js:228 AddIncidentForm: Available incidentTypes: (17) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+AddIncidentForm.js:234 AddIncidentForm: User field value: yolanda@cfalapau.cat
+AddIncidentForm.js:234 AddIncidentForm: User field disabled: false
+AddIncidentForm.js:234 AddIncidentForm: Available users: (12) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+AddIncidentForm.js:234 AddIncidentForm: Matching user found: {name: 'Yolanda Colino', email: 'yolanda@cfalapau.cat', role: 'Usuari'}
+AddIncidentForm.js:255 AddIncidentForm: Type field value: Visita mèdica
+AddIncidentForm.js:255 AddIncidentForm: Available incidentTypes: (17) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+AddIncidentForm.js:228 AddIncidentForm: Rendering form with incidentData: {Usuari (Email): 'yolanda@cfalapau.cat', Data Inici: '2025-09-08', Hora Inici: '18:30', Data Fi: '', Hora Fi: '21:00', …}
+AddIncidentForm.js:228 AddIncidentForm: Available users: (12) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+AddIncidentForm.js:228 AddIncidentForm: Available incidentTypes: (17) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+AddIncidentForm.js:234 AddIncidentForm: User field value: yolanda@cfalapau.cat
+AddIncidentForm.js:234 AddIncidentForm: User field disabled: false
+AddIncidentForm.js:234 AddIncidentForm: Available users: (12) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+AddIncidentForm.js:234 AddIncidentForm: Matching user found: {name: 'Yolanda Colino', email: 'yolanda@cfalapau.cat', role: 'Usuari'}
+AddIncidentForm.js:255 AddIncidentForm: Type field value: Visita mèdica
+AddIncidentForm.js:255 AddIncidentForm: Available incidentTypes: (17) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+AddIncidentForm.js:228 AddIncidentForm: Rendering form with incidentData: {Usuari (Email): '', Data Inici: '2025-09-08', Hora Inici: '18:30', Data Fi: '', Hora Fi: '21:00', …}
+AddIncidentForm.js:228 AddIncidentForm: Available users: (12) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+AddIncidentForm.js:228 AddIncidentForm: Available incidentTypes: (17) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+AddIncidentForm.js:234 AddIncidentForm: User field value: 
+AddIncidentForm.js:234 AddIncidentForm: User field disabled: false
+AddIncidentForm.js:234 AddIncidentForm: Available users: (12) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+AddIncidentForm.js:234 AddIncidentForm: Matching user found: undefined
+AddIncidentForm.js:255 AddIncidentForm: Type field value: 
+AddIncidentForm.js:255 AddIncidentForm: Available incidentTypes: (17) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+AddIncidentForm.js:228 AddIncidentForm: Rendering form with incidentData: {Usuari (Email): '', Data Inici: '2025-09-08', Hora Inici: '18:30', Data Fi: '', Hora Fi: '21:00', …}
+AddIncidentForm.js:228 AddIncidentForm: Available users: (12) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+AddIncidentForm.js:228 AddIncidentForm: Available incidentTypes: (17) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+AddIncidentForm.js:234 AddIncidentForm: User field value: 
+AddIncidentForm.js:234 AddIncidentForm: User field disabled: false
+AddIncidentForm.js:234 AddIncidentForm: Available users: (12) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+AddIncidentForm.js:234 AddIncidentForm: Matching user found: undefined
+AddIncidentForm.js:255 AddIncidentForm: Type field value: 
+AddIncidentForm.js:255 AddIncidentForm: Available incidentTypes: (17) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+AddIncidentForm.js:228 AddIncidentForm: Rendering form with incidentData: {Usuari (Email): '', Data Inici: '2025-09-08', Hora Inici: '18:30', Data Fi: '', Hora Fi: '21:00', …}
+AddIncidentForm.js:228 AddIncidentForm: Available users: (12) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+AddIncidentForm.js:228 AddIncidentForm: Available incidentTypes: (17) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+AddIncidentForm.js:234 AddIncidentForm: User field value: 
+AddIncidentForm.js:234 AddIncidentForm: User field disabled: false
+AddIncidentForm.js:234 AddIncidentForm: Available users: (12) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+AddIncidentForm.js:234 AddIncidentForm: Matching user found: undefined
+AddIncidentForm.js:255 AddIncidentForm: Type field value: 
+AddIncidentForm.js:255 AddIncidentForm: Available incidentTypes: (17) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
