@@ -1,0 +1,44 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# testing
+/coverage
+
+# production
+/build
+
+# misc
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.env
+
+# Google Apps Script files
+*.gs
+*.gs.js
+*.GAS.js
+AvisosGAS.js
+LlibreIncidenciesGAS.js
+MantenimentGAS.js
+ProxyGAS.js
+SeguimentCSIGAS.js
+SeguimentCSIGAS2.js
+TICIncidentsGAS.js
+GrupsAlumnesGAS.txt
+xxxSeguimentCSIGAS.js
+
+# Backup files
+*~
+\#*\#
+*.bak
+*.backup

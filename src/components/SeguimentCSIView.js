@@ -1,0 +1,431 @@
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { ArrowLeft, PlusCircle, Sparkles } from 'lucide-react';
+import { Button } from './ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Input } from './ui/input';
+import { Textarea } from './ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
+
+import { isMobile } from '../lib/isMobile';
+import { csiFetchData, csiPostData, csiGenerateSummary } from '../seguimentCSIService';
+
+// --- Configuration --- (IMPORTANT: Move to .env file in a real app)
+const SPREADSHEET_ID = process.env.REACT_APP_SEGUIMENT_CSI_SPREADSHEET_ID;
+
+const GAS_WEB_APP_URL = process.env.REACT_APP_SEGUIMENT_CSI_GAS_URL; // TODO: Replace with your actual deployed GAS Web App URL
+
+// --- Helper Hooks & Functions ---
+const formatDate = (dateInput) => {
+    if (!dateInput) return '';
+    const date = new Date(dateInput);
+    if (isNaN(date.getTime())) return String(dateInput);
+    return date.toLocaleDateString('ca-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+};
+
+// --- Main Component ---
+const SeguimentCSIView = ({ onBackClick, accessToken, profile }) => {
+    const [currentTab, setCurrentTab] = useState('grups');
+    const [loading, setLoading] = useState(true);
+    const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+    const [error, setError] = useState(null);
+
+    // Data State
+    const [grups, setGrups] = useState([]);
+    const [alumnes, setAlumnes] = useState([]);
+    const [matricules, setMatricules] = useState([]);
+    const [anotacions, setAnotacions] = useState([]);
+
+    // UI State
+    const [selectedGrup, setSelectedGrup] = useState({ curs: '', ensenyament: '' });
+    const [selectedAlumne, setSelectedAlumne] = useState('');
+    const [selectedMatricula, setSelectedMatricula] = useState(null);
+    const [matriculaForm, setMatriculaForm] = useState({ curs: '', ensenyament: '' });
+    const [anotacionsFilters, setAnotacionsFilters] = useState({ curs: '', ensenyament: '', alumne: '' });
+    const [anotacioForm, setAnotacioForm] = useState({ data: new Date().toISOString().split('T')[0], tipus: 'academic', anotacio: '' });
+    const [diariState, setDiariState] = useState({ curs: '', ensenyament: '', data: new Date().toISOString().split('T')[0], rows: [], alumneToDuplicate: '' });
+    const [geminiModal, setGeminiModal] = useState({ show: false, content: '' });
+
+    const showToast = useCallback((message, type = 'success') => {
+        setToast({ show: true, message, type });
+        setTimeout(() => setToast(prev => ({ ...prev, show: false })), 3000);
+    }, []);
+
+    const fetchData = useCallback((sheetName) => {
+        if (isMobile()) {
+            return csiFetchData(sheetName, accessToken);
+        } else {
+            return new Promise((resolve, reject) => {
+                const callbackName = `jsonp_callback_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+                window[callbackName] = (response) => {
+                    delete window[callbackName];
+                    script.remove();
+                    if (response.error) {
+                        reject(new Error(response.error));
+                    } else {
+                        resolve(response.data);
+                    }
+                };
+
+                const script = document.createElement('script');
+                script.src = `${GAS_WEB_APP_URL}?sheetName=${sheetName}&callback=${callbackName}`;
+                script.onerror = () => {
+                    delete window[callbackName];
+                    script.remove();
+                    reject(new Error(`Failed to load script for ${sheetName}`));
+                };
+                document.head.appendChild(script);
+
+                // Set a timeout for the request
+                const timeout = setTimeout(() => {
+                    delete window[callbackName];
+                    script.remove();
+                    reject(new Error(`Request for ${sheetName} timed out.`));
+                }, 30000); // 30 seconds timeout
+            });
+        }
+    }, [accessToken]);
+
+    const initializeApp = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            // console.log("CSI View: Initializing app in parallel...");
+
+            const [g, a, m, an] = await Promise.all([
+                csiFetchData(accessToken, 'Grups'),
+                csiFetchData(accessToken, 'Alumnes'),
+                csiFetchData(accessToken, 'Matrícules'),
+                csiFetchData(accessToken, 'Anotacions')
+            ]);
+
+            setGrups(g);
+            // console.log("CSI View: Fetched Grups.", g);
+            setAlumnes(a);
+            // console.log("CSI View: Fetched Alumnes.", a);
+            setMatricules(m);
+            // console.log("CSI View: Fetched Matrícules.", m);
+            setAnotacions(an);
+            // console.log("CSI View: Fetched Anotacions.", an);
+
+            // console.log("CSI View: All data fetched in parallel.");
+        } catch (err) {
+            console.error("CSI View: Error initializing app:", err);
+            setError(err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const postData = useCallback((sheetName, data) => {
+        if (isMobile()) {
+            return csiPostData(accessToken, sheetName, data);
+        } else {
+            return new Promise((resolve, reject) => {
+                const callbackName = `jsonp_callback_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+                window[callbackName] = (response) => {
+                    delete window[callbackName];
+                    script.remove();
+                    if (response.success === false) {
+                        reject(new Error(response.error));
+                    } else {
+                        resolve(response);
+                    }
+                };
+
+                const payload = encodeURIComponent(JSON.stringify(data));
+                const script = document.createElement('script');
+                script.src = `${GAS_WEB_APP_URL}?sheetName=${sheetName}&payload=${payload}&callback=${callbackName}&method=POST`; // GAS doPost expects method=POST
+                script.onerror = () => {
+                    delete window[callbackName];
+                    script.remove();
+                    reject(new Error(`Failed to load script for ${sheetName}`));
+                };
+                document.head.appendChild(script);
+
+                // Set a timeout for the request
+                const timeout = setTimeout(() => {
+                    delete window[callbackName];
+                    script.remove();
+                    reject(new Error(`Request for ${sheetName} timed out.`));
+                }, 30000); // 30 seconds timeout
+            });
+        }
+    }, [accessToken]);
+
+    useEffect(() => {
+        // Only initialize the app if we have an access token and a profile
+        if (accessToken && profile) {
+            initializeApp();
+        }
+    }, [accessToken, profile]);
+
+    // --- Event Handlers ---
+    const handleAddGrup = async (e) => {
+        e.preventDefault();
+        const newGrup = { 'Curs Acadèmic': e.target.elements.curs.value, 'Ensenyament': e.target.elements.ensenyament.value };
+        if (await csiPostData(accessToken, 'Grups', newGrup)) {
+            setGrups(prev => [...prev, newGrup]);
+            showToast('Grup afegit correctament!');
+            e.target.reset();
+        }
+    };
+
+    const handleAddAlumne = async (e) => {
+        e.preventDefault();
+        const newAlumne = { 'Nom': e.target.elements.nom.value };
+        if (await csiPostData(accessToken, 'Alumnes', newAlumne)) {
+            setAlumnes(prev => [...prev, newAlumne]);
+            showToast('Alumne afegit correctament!');
+            e.target.reset();
+        }
+    };
+
+    const handleAddMatricula = async (e) => {
+        e.preventDefault();
+        if (!selectedAlumne) { showToast("Tria un alumne primer", "error"); return; }
+        if (!matriculaForm.curs || !matriculaForm.ensenyament) { showToast("Tria un curs i ensenyament", "error"); return; }
+        const newMatricula = { 'Curs': matriculaForm.curs, 'Ensenyament': matriculaForm.ensenyament, 'Alumne': selectedAlumne };
+        if (await csiPostData(accessToken, 'Matrícules', newMatricula)) {
+            setMatricules(prev => [...prev, newMatricula]);
+            showToast('Alumne matriculat correctament!');
+            setMatriculaForm({ curs: '', ensenyament: '' });
+        }
+    };
+
+    const handleAddAnotacio = async (e) => {
+        e.preventDefault();
+        const { curs, ensenyament, alumne } = anotacionsFilters;
+        if (!curs || !ensenyament || !alumne) { showToast("Cal seleccionar curs, ensenyament i alumne als filtres.", "error"); return; }
+        const newAnotacio = { 'Ensenyament': ensenyament, 'Alumne': alumne, 'Data': anotacioForm.data, 'Tipus': anotacioForm.tipus, 'Anotació': anotacioForm.anotacio };
+        if (await csiPostData(accessToken, 'Anotacions', newAnotacio)) {
+            setAnotacions(prev => [...prev, newAnotacio]);
+            showToast("Anotació afegida correctament!");
+            setAnotacioForm(prev => ({ ...prev, anotacio: '' }));
+        }
+    };
+
+    const handleAddAnotacioFromAlumneTab = async (e) => {
+        e.preventDefault();
+        if (!selectedMatricula) { return; }
+        const newAnotacio = { ...selectedMatricula, 'Data': e.target.elements.data.value, 'Tipus': e.target.elements.tipus.value, 'Anotació': e.target.elements.anotacio.value };
+        if (await csiPostData(accessToken, 'Anotacions', newAnotacio)) {
+            setAnotacions(prev => [...prev, newAnotacio]);
+            showToast("Anotació afegida correctament!");
+            e.target.reset();
+        }
+    };
+
+    const handleGuardarDiari = async () => {
+        const { curs, ensenyament, data } = diariState;
+        if (!curs || !ensenyament || !data) { showToast("Selecciona curs, ensenyament i data", 'error'); return; }
+        const novesAnotacions = diariState.rows.filter(row => row.anotacio.trim() !== '').map(row => ({ 'Ensenyament': ensenyament, 'Alumne': row.alumne, 'Data': data, 'Tipus': row.tipus, 'Anotació': row.anotacio.trim() }));
+        if (novesAnotacions.length === 0) { showToast("No hi ha cap anotació per guardar.", 'error'); return; }
+        if (await csiPostData(accessToken, 'Anotacions', novesAnotacions)) {
+            setAnotacions(prev => [...prev, ...novesAnotacions]);
+            showToast(`${novesAnotacions.length} anotacions guardades!`);
+            setDiariState(prev => ({ ...prev, rows: prev.rows.map(r => ({ ...r, anotacio: '' })) }));
+        }
+    };
+
+    const handleDuplicarFila = () => {
+        if (!diariState.alumneToDuplicate) { showToast("Selecciona un alumne per duplicar", "error"); return; }
+        setDiariState(prev => ({ ...prev, rows: [...prev.rows, { alumne: prev.alumneToDuplicate, tipus: 'academic', anotacio: '' }] }));
+    };
+
+    const handleGeminiClick = async () => {
+        const { alumne } = anotacionsFilters;
+        if (!alumne) { showToast("Selecciona un alumne per generar el resum.", "error"); return; }
+        const anotacionsPerResum = filteredAnotacions.filter(a => a.Alumne === alumne);
+        if (anotacionsPerResum.length === 0) { showToast("No hi ha anotacions per a generar el resum.", "error"); return; }
+        setLoading(true);
+        try {
+            const prompt = `Ets un tutor expert. Tingues en compte que els alumnes són persones adultes; els suggeriments han d'anar dirigits a l'alumne mateix, no a la seva família. Basant-te en les següents anotacions sobre l'alumne ${alumne}, fes un resum concís de la seva evolució en format de punts clau i, a continuació, proposa un suggeriment clar i accionable per a la seva millora. Estructura la resposta amb un títol "Resum d'Evolució" i un altre "Suggeriment". Anotacions:\n${anotacionsPerResum.map(a => `${a.Data} (${a.Tipus}): ${a.Anotació}`).join('\n')}`;
+            
+            const text = await csiGenerateSummary(accessToken, prompt);
+
+            setGeminiModal({ show: true, content: text });
+        } catch (error) {
+            console.error("Error amb la generació de resum via GAS:", error);
+            showToast(`No s'ha pogut generar el resum: ${error.message}`, "error");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // --- Memoized Filtered Data ---
+    const filteredAnotacions = useMemo(() => {
+        return anotacions
+            .filter(a => 
+                (!anotacionsFilters.curs || matricules.some(m => m.Alumne === a.Alumne && m.Curs === anotacionsFilters.curs)) &&
+                (!anotacionsFilters.ensenyament || a.Ensenyament === anotacionsFilters.ensenyament) &&
+                (!anotacionsFilters.alumne || a.Alumne === anotacionsFilters.alumne)
+            )
+            .sort((a, b) => new Date(b.Data) - new Date(a.Data));
+    }, [anotacions, matricules, anotacionsFilters]);
+
+    useEffect(() => {
+        const { curs, ensenyament } = diariState;
+        if (curs && ensenyament) {
+            const alumnesMatriculats = matricules.filter(m => m.Curs === curs && m.Ensenyament === ensenyament).map(m => m.Alumne);
+            setDiariState(prev => ({ ...prev, rows: alumnesMatriculats.sort().map(alumne => ({ alumne, tipus: 'academic', anotacio: '' })), alumneToDuplicate: alumnesMatriculats[0] || '' }));
+        } else {
+            setDiariState(prev => ({ ...prev, rows: [], alumneToDuplicate: '' }));
+        }
+    }, [diariState.curs, diariState.ensenyament, matricules]);
+
+    // No longer need isGapiReady check as we are using GAS
+    // if (!isGapiReady) return <div className="text-center p-8">Carregant API de Google...</div>;
+
+    if (error) {
+        return (
+            <div className="text-center p-8 bg-red-100 border border-red-400 text-red-700 rounded-lg max-w-md mx-auto mt-10">
+                <h2 className="text-2xl font-bold mb-4">Error en Carregar les Dades</h2>
+                <p className="mb-4">Hi ha hagut un problema en connectar amb Google Sheets. Això pot ser degut a un problema de xarxa o de permisos.</p>
+                <p className="text-sm text-gray-600 mb-6">Detalls: {error.result?.error?.message || error.message || 'Error desconegut'}</p>
+                <Button onClick={() => initializeApp()}>Reintentar</Button>
+            </div>
+        );
+    }
+
+    const Badge = ({ type }) => <span className={`badge tipo-${type?.toLowerCase() || 'default'}`}>{type}</span>;
+
+    return (
+        <>
+        <style>{`.badge{padding:.25rem .75rem;border-radius:9999px;font-size:.75rem;font-weight:600;white-space:nowrap}.tipo-academic{background-color:#dbeafe;color:#1e40af}.tipo-social{background-color:#ede9fe;color:#5b21b6}.tipo-absentisme{background-color:#fef3c7;color:#b45309}.tipo-baixa{background-color:#fee2e2;color:#991b1b}.tipo-derivacio{background-color:#dcfce7;color:#166534}.tipo-tutoria{background-color:#cffafe;color:#0891b2}.tipo-default{background-color:#e5e7eb;color:#4b5563}.w-col-data{width:80px;min-width:80px}.w-col-tipus{width:100px;min-width:100px}.w-col-grup{width:180px;min-width:180px}.w-col-anotacio{width:auto;flex-grow:1}.w-col-alumne-narrow{width:150px;min-width:150px}`}</style>
+        <div className="min-h-screen bg-gray-100">
+            {loading && <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"><p className="text-white text-xl">Processant...</p></div>}
+            {toast.show && <div className={`fixed bottom-5 right-5 text-white py-3 px-6 rounded-lg shadow-xl z-50 ${toast.type === 'error' ? 'bg-red-600' : 'bg-green-600'}`}><p>{toast.message}</p></div>}
+            <Dialog open={geminiModal.show} onOpenChange={() => setGeminiModal({ show: false, content: '' })}><DialogContent><DialogHeader><DialogTitle>Resum de la IA</DialogTitle><DialogDescription asChild><div className="prose" dangerouslySetInnerHTML={{ __html: geminiModal.content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/^\* (.*$)/gm, '<ul><li>$1</li></ul>').replace(/<\/ul>\n<ul>/g, '') }} /></DialogDescription></DialogHeader></DialogContent></Dialog>
+
+            <header className="bg-white shadow-sm sticky top-0 z-40"><div className="container mx-auto p-4 flex justify-between items-center"><Button onClick={onBackClick}><ArrowLeft className="h-4 w-4 mr-2" />Tornar</Button><h1 className="text-2xl font-bold">Seguiment d'Alumnes</h1><div className="text-right">                        <div className="font-semibold">{profile?.name} ({profile?.role})</div><div className="text-xs text-muted-foreground">{profile?.email}</div></div></div></header>
+
+            <main className="container mx-auto p-4">
+                <div className="bg-white p-6 rounded-xl shadow-md">
+                    <nav className="flex flex-wrap justify-center gap-2 mb-6">
+                        <Button onClick={() => setCurrentTab('grups')} variant={currentTab === 'grups' ? 'default' : 'outline'}>Grups</Button>
+                        <Button onClick={() => setCurrentTab('alumnes')} variant={currentTab === 'alumnes' ? 'default' : 'outline'}>Alumnes</Button>
+                        <Button onClick={() => setCurrentTab('anotacions')} variant={currentTab === 'anotacions' ? 'default' : 'outline'}>Anotacions</Button>
+                        <Button onClick={() => setCurrentTab('diari')} variant={currentTab === 'diari' ? 'default' : 'outline'}>Diari de Classe</Button>
+                    </nav>
+
+                    {currentTab === 'grups' && <TabGrups {...{ grups, matricules, anotacions, selectedGrup, setSelectedGrup, handleAddGrup, Badge }} />}
+                    {currentTab === 'alumnes' && <TabAlumnes {...{ alumnes, grups, matricules, anotacions, selectedAlumne, setSelectedAlumne, selectedMatricula, setSelectedMatricula, matriculaForm, setMatriculaForm, handleAddAlumne, handleAddMatricula, handleAddAnotacioFromAlumneTab, Badge }} />}
+                    {currentTab === 'anotacions' && <TabAnotacions {...{ anotacions: filteredAnotacions, filters: anotacionsFilters, setFilters: setAnotacionsFilters, grups, matricules, Badge, anotacioForm, setAnotacioForm, handleAddAnotacio, handleGeminiClick }} />}
+                    {currentTab === 'diari' && <TabDiari {...{ diariState, setDiariState, grups, handleGuardarDiari, handleDuplicarFila }} />}
+                </div>
+            </main>
+        </div>
+        </>
+    );
+};
+
+// --- Sub-components for each tab ---
+const TabGrups = ({ grups, matricules, anotacions, selectedGrup, setSelectedGrup, handleAddGrup, Badge }) => (
+    <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div>
+                <h2 className="text-xl font-bold mb-4">Selecció de Grup</h2>
+                <div className="space-y-4">
+                    <Select onValueChange={c => setSelectedGrup({ curs: c, ensenyament: '' })} value={selectedGrup.curs}><SelectTrigger><SelectValue placeholder="1. Tria un Curs" /></SelectTrigger><SelectContent>{[...new Set(grups.map(g => g['Curs Acadèmic']))].sort().map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select>
+                    <div className="space-y-2 max-h-48 overflow-y-auto p-2 bg-gray-50 border rounded-md">
+                        {selectedGrup.curs ? grups.filter(g => g['Curs Acadèmic'] === selectedGrup.curs).map(g => g.Ensenyament).sort().map(e => <div key={e} className={`p-3 rounded-lg cursor-pointer ${selectedGrup.ensenyament === e ? 'bg-purple-600 text-white' : 'bg-white hover:bg-purple-100'}`} onClick={() => setSelectedGrup(prev => ({ ...prev, ensenyament: e }))}>{e}</div>) : <p className="text-sm text-gray-500">Tria un curs per veure els ensenyaments.</p>}
+                    </div>
+                </div>
+            </div>
+            <div className="p-4 border rounded-lg bg-gray-50 self-start">
+                <h3 className="text-lg font-semibold mb-3">Afegir Nou Grup</h3>
+                <form onSubmit={handleAddGrup} className="space-y-3"><Input name="curs" placeholder="Curs Acadèmic" required /><Input name="ensenyament" placeholder="Ensenyament" required /><Button type="submit" className="w-full">Afegir Grup</Button></form>
+            </div>
+        </div>
+        {selectedGrup.ensenyament && (
+            <div className="mt-6 pt-6 border-t">
+                <h2 className="text-xl font-bold mb-4">Detalls del Grup: <span className="text-purple-700">{selectedGrup.curs} / {selectedGrup.ensenyament}</span></h2>
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                    <div className="xl:col-span-1"> <h3 className="text-lg font-semibold mb-2">Alumnes Matriculats</h3> <div className="overflow-x-auto max-h-96 border rounded-lg"><table className="min-w-full text-sm"><tbody>{matricules.filter(m => m.Curs === selectedGrup.curs && m.Ensenyament === selectedGrup.ensenyament).map(m => m.Alumne).sort().map(alumne => <tr key={alumne}><td className="p-2 border-b">{alumne}</td></tr>)}</tbody></table></div></div>
+                    <div className="xl:col-span-2"> <h3 className="text-lg font-semibold mb-2">Anotacions del Grup</h3> <div className="overflow-auto max-h-96 border rounded-lg"><table className="min-w-full text-sm"><thead><tr className="bg-gray-50"><th className="p-2 border-b text-left">Alumne</th><th className="p-2 border-b text-left w-col-data">Data</th><th className="p-2 border-b text-left w-col-tipus">Tipus</th><th className="p-2 border-b text-left w-col-anotacio">Anotació</th></tr></thead><tbody>{anotacions.filter(a => a.Ensenyament === selectedGrup.ensenyament && matricules.some(m => m.Alumne === a.Alumne && m.Curs === selectedGrup.curs)).sort((a,b) => new Date(b.Data) - new Date(a.Data)).map((a, i) => <tr key={i}><td className="p-2 border-b">{a.Alumne}</td><td className="p-2 border-b w-col-data">{formatDate(a.Data)}</td><td className="p-2 border-b w-col-tipus"><Badge type={a.Tipus} /></td><td className="p-2 border-b w-col-anotacio">{a.Anotació}</td></tr>)}</tbody></table></div></div>
+                </div>
+            </div>
+        )}
+    </div>
+);
+
+const TabAlumnes = ({ alumnes, grups, matricules, anotacions, selectedAlumne, setSelectedAlumne, selectedMatricula, setSelectedMatricula, matriculaForm, setMatriculaForm, handleAddAlumne, handleAddMatricula, handleAddAnotacioFromAlumneTab, Badge }) => (
+    <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div>
+                <h2 className="text-xl font-bold mb-4">Selecció i Matrícula</h2>
+                <div className="space-y-4">
+                    <Select onValueChange={v => {setSelectedAlumne(v); setSelectedMatricula(null);}} value={selectedAlumne}><SelectTrigger><SelectValue placeholder="1. Tria un Alumne" /></SelectTrigger><SelectContent>{alumnes.sort((a,b) => a.Nom.localeCompare(b.Nom)).map(a => <SelectItem key={a.Nom} value={a.Nom}>{a.Nom}</SelectItem>)}</SelectContent></Select>
+                    <div className="space-y-2 max-h-48 overflow-y-auto p-2 bg-gray-50 border rounded-md">
+                        {selectedAlumne ? matricules.filter(m => m.Alumne === selectedAlumne).sort((a,b) => b.Curs.localeCompare(a.Curs)).map(m => <div key={`${m.Curs}-${m.Ensenyament}`} className={`p-3 rounded-lg cursor-pointer ${selectedMatricula?.Curs === m.Curs && selectedMatricula?.Ensenyament === m.Ensenyament ? 'bg-purple-600 text-white' : 'bg-white hover:bg-purple-100'}`} onClick={() => setSelectedMatricula(m)}>{`${m.Curs} / ${m.Ensenyament}`}</div>) : <p className="text-sm text-gray-500">Tria un alumne per veure les seves matrícules.</p>}
+                    </div>
+                </div>
+            </div>
+            <div className="p-4 border rounded-lg bg-gray-50 self-start">
+                <h3 className="text-lg font-semibold mb-3">Nova Matrícula</h3>
+                <form onSubmit={handleAddMatricula} className="space-y-3">
+                    <Input value={selectedAlumne || "Alumne no seleccionat"} disabled />
+                    <Select onValueChange={c => setMatriculaForm({ curs: c, ensenyament: '' })} value={matriculaForm.curs}><SelectTrigger><SelectValue placeholder="2. Tria un Curs" /></SelectTrigger><SelectContent>{[...new Set(grups.map(g => g['Curs Acadèmic']))].sort().map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select>
+                    <Select onValueChange={e => setMatriculaForm(f => ({ ...f, ensenyament: e }))} value={matriculaForm.ensenyament} disabled={!matriculaForm.curs}><SelectTrigger><SelectValue placeholder="3. Tria un Ensenyament" /></SelectTrigger><SelectContent>{matriculaForm.curs && grups.filter(g => g['Curs Acadèmic'] === matriculaForm.curs).map(g => g.Ensenyament).sort().map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}</SelectContent></Select>
+                    <Button type="submit" className="w-full" disabled={!selectedAlumne}>Matricular Alumne</Button>
+                </form>
+            </div>
+        </div>
+        {selectedMatricula && (
+            <div className="mt-6 pt-6 border-t space-y-6">
+                <h2 className="text-xl font-bold">Anotacions de: <span className="text-purple-700">{selectedMatricula.Alumne} a {selectedMatricula.Ensenyament}</span></h2>
+                <div className="overflow-auto max-h-96 border rounded-lg"><table className="min-w-full text-sm"><thead><tr className="bg-gray-50"><th className="p-2 border-b text-left w-col-data">Data</th><th className="p-2 border-b text-left w-col-tipus">Tipus</th><th className="p-2 border-b text-left w-col-anotacio">Anotació</th></tr></thead><tbody>{anotacions.filter(a => a.Alumne === selectedMatricula.Alumne && a.Ensenyament === selectedMatricula.Ensenyament).sort((a,b) => new Date(b.Data) - new Date(a.Data)).map((a,i) => <tr key={i}><td className="p-2 border-b w-col-data">{formatDate(a.Data)}</td><td className="p-2 border-b w-col-tipus"><Badge type={a.Tipus} /></td><td className="p-2 border-b w-col-anotacio">{a.Anotació}</td></tr>)}</tbody></table></div>
+                <div className="p-4 border rounded-lg bg-gray-50">
+                    <h3 className="text-lg font-semibold mb-3">Nova Anotació per a {selectedMatricula.Alumne}</h3>
+                    <form onSubmit={handleAddAnotacioFromAlumneTab} className="space-y-3"><Input type="date" name="data" defaultValue={new Date().toISOString().split('T')[0]} required /><Select name="tipus" defaultValue="academic"><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="academic">Acadèmic</SelectItem><SelectItem value="social">Social</SelectItem><SelectItem value="absentisme">Absentisme</SelectItem><SelectItem value="baixa">Baixa</SelectItem><SelectItem value="derivacio">Derivació</SelectItem><SelectItem value="tutoria">Tutoria</SelectItem></SelectContent></Select><Textarea name="anotacio" placeholder="Anotació..." required /><Button type="submit" className="w-full">Afegir Anotació</Button></form>
+                </div>
+            </div>
+        )}
+    </div>
+);
+
+const TabAnotacions = ({ anotacions, filters, setFilters, grups, matricules, Badge, anotacioForm, setAnotacioForm, handleAddAnotacio, handleGeminiClick }) => (
+    <div className="space-y-6">
+        <h2 className="text-xl font-bold mb-4">Cercador d'Anotacions</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 p-4 bg-gray-50 rounded-lg border">
+            <Select onValueChange={c => setFilters({ curs: c, ensenyament: '', alumne: '' })} value={filters.curs}><SelectTrigger><SelectValue placeholder="Filtrar per Curs..." /></SelectTrigger><SelectContent>{[...new Set(grups.map(g => g['Curs Acadèmic']))].sort().map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select>
+            <Select onValueChange={e => setFilters(f => ({ ...f, ensenyament: e, alumne: '' }))} value={filters.ensenyament} disabled={!filters.curs}><SelectTrigger><SelectValue placeholder="Filtrar per Ensenyament..." /></SelectTrigger><SelectContent>{filters.curs && grups.filter(g => g['Curs Acadèmic'] === filters.curs).map(g => g.Ensenyament).sort().map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}</SelectContent></Select>
+            <Select onValueChange={a => setFilters(f => ({ ...f, alumne: a }))} value={filters.alumne} disabled={!filters.ensenyament}><SelectTrigger><SelectValue placeholder="Filtrar per Alumne..." /></SelectTrigger><SelectContent>{filters.ensenyament && matricules.filter(m => m.Curs === filters.curs && m.Ensenyament === filters.ensenyament).map(m => m.Alumne).sort().map(a => <SelectItem key={a} value={a}>{a}</SelectItem>)}</SelectContent></Select>
+        </div>
+        <div className="flex justify-end mb-6"><Button onClick={handleGeminiClick} disabled={!filters.alumne}><Sparkles className="h-4 w-4 mr-2" />Generar Comentari amb IA</Button></div>
+        <div className="overflow-auto max-h-[50vh]"><table className="min-w-full text-sm"><thead><tr className="bg-gray-50"><th className="p-2 border-b text-left w-col-alumne-narrow">Alumne</th><th className="p-2 border-b text-left w-col-data">Data</th><th className="p-2 border-b text-left w-col-tipus">Tipus</th><th className="p-2 border-b text-left w-col-anotacio">Anotació</th><th className="p-2 border-b text-left w-col-grup">Grup</th></tr></thead><tbody>{anotacions.map((a, i) => {const matricula = matricules.find(m => m.Alumne === a.Alumne && m.Ensenyament === a.Ensenyament);const displayGrup = matricula ? `${matricula.Curs} / ${a.Ensenyament}` : a.Ensenyament;return <tr key={i}><td className="p-2 border-b w-col-alumne-narrow">{a.Alumne}</td><td className="p-2 border-b w-col-data">{formatDate(a.Data)}</td><td className="p-2 border-b w-col-tipus"><Badge type={a.Tipus} /></td><td className="p-2 border-b w-col-anotacio">{a.Anotació}</td><td className="p-2 border-b w-col-grup">{displayGrup}</td></tr>;})}</tbody></table></div>
+        <div className="p-4 border border-gray-200 rounded-lg bg-gray-50">
+            <h3 className="text-lg font-semibold mb-3">Nova Anotació</h3>
+            <form onSubmit={handleAddAnotacio} className="space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><label>Grup</label><Input value={filters.ensenyament ? `${filters.curs} / ${filters.ensenyament}` : ""} disabled /></div>
+                    <div><label>Alumne</label><Input value={filters.alumne} disabled /></div>
+                    <div><label>Data</label><Input type="date" value={anotacioForm.data} onChange={e => setAnotacioForm(f => ({...f, data: e.target.value}))} required /></div>
+                    <div><label>Tipus</label><Select value={anotacioForm.tipus} onValueChange={t => setAnotacioForm(f => ({...f, tipus: t}))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="academic">Acadèmic</SelectItem><SelectItem value="social">Social</SelectItem><SelectItem value="absentisme">Absentisme</SelectItem><SelectItem value="baixa">Baixa</SelectItem><SelectItem value="derivacio">Derivació</SelectItem><SelectItem value="tutoria">Tutoria</SelectItem></SelectContent></Select></div>
+                    <div className="md:col-span-2"><label>Anotació</label><Textarea value={anotacioForm.anotacio} onChange={e => setAnotacioForm(f => ({...f, anotacio: e.target.value}))} required /></div>
+                </div>
+                <Button type="submit" className="w-full mt-4" disabled={!filters.alumne}>Afegir Anotació</Button>
+            </form>
+        </div>
+    </div>
+);
+
+const TabDiari = ({ diariState, setDiariState, grups, handleGuardarDiari, handleDuplicarFila }) => (
+    <div className="space-y-6">
+        <h2 className="text-xl font-bold mb-4">Diari de Classe</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 p-4 bg-gray-50 rounded-lg border">
+            <Select onValueChange={c => setDiariState(s => ({ ...s, curs: c, ensenyament: '' }))} value={diariState.curs}><SelectTrigger><SelectValue placeholder="1. Tria Curs" /></SelectTrigger><SelectContent>{[...new Set(grups.map(g => g['Curs Acadèmic']))].sort().map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select>
+            <Select onValueChange={e => setDiariState(s => ({ ...s, ensenyament: e }))} value={diariState.ensenyament} disabled={!diariState.curs}><SelectTrigger><SelectValue placeholder="2. Tria Ensenyament" /></SelectTrigger><SelectContent>{diariState.curs && grups.filter(g => g['Curs Acadèmic'] === diariState.curs).map(g => g.Ensenyament).sort().map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}</SelectContent></Select>
+            <Input type="date" value={diariState.data} onChange={e => setDiariState(s => ({ ...s, data: e.target.value }))} />
+        </div>
+        <div className="flex items-center gap-4 mb-4 p-4 bg-gray-50 rounded-lg border">
+            <label className="font-semibold">Duplicar fila per a:</label>
+            <Select onValueChange={val => setDiariState(s => ({...s, alumneToDuplicate: val}))} value={diariState.alumneToDuplicate}><SelectTrigger className="flex-grow"><SelectValue placeholder="Selecciona un alumne" /></SelectTrigger><SelectContent>{[...new Set(diariState.rows.map(r => r.alumne))].map(a => <SelectItem key={a} value={a}>{a}</SelectItem>)}</SelectContent></Select>
+            <Button onClick={handleDuplicarFila} variant="outline"><PlusCircle className="h-4 w-4 mr-2" />Duplicar</Button>
+        </div>
+        <div className="overflow-auto max-h-[50vh] mb-6"><table className="min-w-full text-sm"><thead><tr className="bg-gray-50"><th className="p-2 border-b">Alumne</th><th className="p-2 border-b w-col-tipus">Tipus</th><th className="p-2 border-b w-col-anotacio">Anotació</th></tr></thead><tbody>{diariState.rows.map((row, index) => <tr key={`${row.alumne}-${index}`}><td className="p-2 border-b align-top">{row.alumne}</td><td className="p-2 border-b w-col-tipus"><Select value={row.tipus} onValueChange={v => setDiariState(s => ({ ...s, rows: s.rows.map((r, i) => i === index ? { ...r, tipus: v } : r) }))}><SelectTrigger /><SelectContent><SelectItem value="academic">Acadèmic</SelectItem><SelectItem value="social">Social</SelectItem><SelectItem value="absentisme">Absentisme</SelectItem><SelectItem value="baixa">Baixa</SelectItem><SelectItem value="derivacio">Derivació</SelectItem><SelectItem value="tutoria">Tutoria</SelectItem></SelectContent></Select></td><td className="p-2 border-b w-col-anotacio"><Textarea value={row.anotacio} onChange={e => setDiariState(s => ({ ...s, rows: s.rows.map((r, i) => i === index ? { ...r, anotacio: e.target.value } : r) }))} /></td></tr>)}</tbody></table></div>
+        <Button onClick={handleGuardarDiari} disabled={diariState.rows.length === 0}>Guardar Diari</Button>
+    </div>
+);
+
+export default SeguimentCSIView;

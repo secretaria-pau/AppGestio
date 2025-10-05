@@ -1,0 +1,204 @@
+/* Custom theme styles for react-big-calendar to match the app's design */
+
+.rbc-calendar {
+  font-family: inherit;
+}
+
+.rbc-header {
+  padding: 12px;
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  font-weight: 500;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+}
+
+.rbc-header + .rbc-header {
+  border-left: 1px solid hsl(var(--border));
+}
+
+.rbc-month-view {
+  border: 1px solid hsl(var(--border));
+  border-radius: calc(var(--radius) - 2px);
+  overflow: hidden;
+}
+
+.rbc-month-row {
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+.rbc-day-bg + .rbc-day-bg {
+  border-left: 1px solid hsl(var(--border));
+}
+
+.rbc-month-row + .rbc-month-row {
+  border-top: 1px solid hsl(var(--border));
+}
+
+.rbc-today {
+  background-color: hsl(var(--accent));
+}
+
+.rbc-day-bg.rbc-today {
+  background-color: hsl(var(--accent));
+}
+
+.rbc-off-range-bg {
+  background-color: hsl(var(--muted));
+}
+
+.rbc-event {
+  background-color: hsl(var(--primary));
+  border: none;
+  padding: 4px 8px;
+  border-radius: var(--radius);
+  color: hsl(var(--primary-foreground));
+  font-size: 0.85em;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.rbc-agenda-view table.rbc-agenda-table {
+  border: 1px solid hsl(var(--border));
+  border-radius: calc(var(--radius) - 2px);
+}
+
+.rbc-agenda-view table.rbc-agenda-table th {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+
+.rbc-agenda-view table.rbc-agenda-table tbody > tr + tr {
+  border-top: 1px solid hsl(var(--border));
+}
+
+.rbc-agenda-date-cell, .rbc-agenda-time-cell {
+  padding: 8px;
+}
+
+.rbc-agenda-event-cell {
+  padding: 8px;
+}
+
+.rbc-time-header {
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+.rbc-time-header-content {
+  border-left: 1px solid hsl(var(--border));
+}
+
+.rbc-time-content {
+  border-top: 1px solid hsl(var(--border));
+}
+
+.rbc-time-slot {
+  border-top: 1px solid hsl(var(--border));
+  font-size: 0.8em;
+  color: hsl(var(--muted-foreground));
+}
+
+.rbc-day-slot .rbc-time-slot {
+  border-top: 1px dashed hsl(var(--border));
+}
+
+.rbc-event-label {
+  font-size: 0.8em;
+}
+
+.rbc-toolbar {
+  padding: 12px;
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+.rbc-toolbar .rbc-toolbar-label {
+  font-size: 1.2em;
+  font-weight: 600;
+}
+
+.rbc-toolbar button {
+  border: 1px solid hsl(var(--border));
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  padding: 6px 12px;
+  border-radius: var(--radius);
+}
+
+.rbc-toolbar button:hover {
+  background-color: hsl(var(--secondary));
+}
+
+.rbc-toolbar button.rbc-active {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+
+.rbc-toolbar button:active {
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Week view specific styles */
+.rbc-time-view {
+  border: 1px solid hsl(var(--border));
+  border-radius: calc(var(--radius) - 2px);
+  overflow: hidden;
+}
+
+.rbc-time-header.rbc-overflowing {
+  border-right: 1px solid hsl(var(--border));
+}
+
+.rbc-time-header-content {
+  border-left: 1px solid hsl(var(--border));
+}
+
+.rbc-time-content > * + * > * {
+  border-left: 1px solid hsl(var(--border));
+}
+
+.rbc-day-slot .rbc-time-header-cell {
+  vertical-align: middle;
+  text-align: center;
+  padding: 8px 0;
+}
+
+/* Day view specific styles */
+.rbc-day-slot .rbc-time-gutter,
+.rbc-day-slot .rbc-header,
+.rbc-day-slot .rbc-day-bg {
+  min-width: 60px;
+}
+
+/* Active day header in week view */
+.rbc-header.rbc-today {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+
+.rbc-day-bg.rbc-today + .rbc-day-bg:not(.rbc-today) {
+  border-left: 1px solid hsl(var(--border));
+}
+
+.rbc-today.rbc-day-bg {
+  background-color: hsl(var(--accent));
+}
+
+.rbc-today.rbc-header {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  font-weight: bold;
+}
+
+/* Consistent font sizes throughout */
+.rbc-header,
+.rbc-time-header,
+.rbc-time-slot,
+.rbc-time-gutter {
+  font-size: 0.9rem;
+}
+
+.rbc-header {
+  font-size: 1rem;
+}
