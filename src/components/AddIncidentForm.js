@@ -157,15 +157,16 @@ const formatTimeForInput = (timeStr) => {
   return timeStr; // Fallback
 };
 
-const AddIncidentForm = ({ 
-  incidentToEdit, 
-  originalSheetRowIndex, 
-  onSaveIncident, 
-  onClose, 
-  setError, 
-  profile, 
-  users, 
-  incidentTypes 
+const AddIncidentForm = ({
+  incidentToEdit,
+  originalSheetRowIndex,
+  onSaveIncident,
+  onClose,
+  setError,
+  profile,
+  users,
+  incidentTypes,
+  isSaving
 }) => {
   const [incidentData, setIncidentData] = useState({
     'Usuari (Email)': '',
@@ -586,11 +587,11 @@ const AddIncidentForm = ({
       </div>
 
       <div className="flex justify-end gap-2">
-        <Button type="button" variant="outline" onClick={onClose}>
+        <Button type="button" variant="outline" onClick={onClose} disabled={isSaving}>
           Cancel·lar
         </Button>
-        <Button type="submit" className="bg-[#288185] hover:bg-[#1e686b] text-white">
-          {incidentToEdit ? 'Guardar Canvis' : 'Afegir Incidència'}
+        <Button type="submit" className="bg-[#288185] hover:bg-[#1e686b] text-white" disabled={isSaving}>
+          {isSaving ? (incidentToEdit ? 'Guardant...' : 'Afegint...') : (incidentToEdit ? 'Guardar Canvis' : 'Afegir Incidència')}
         </Button>
       </div>
     </form>

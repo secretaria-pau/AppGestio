@@ -170,6 +170,7 @@ function App() {
   const [currentView, setCurrentView] = useState('list');
   const [accessToken, setAccessToken] = useState(null); // Start with null, don't load from localStorage immediately
   const [isAuthenticatedSession, setIsAuthenticatedSession] = useState(false); // New state to track if login process was completed in this session
+  const [isSaving, setIsSaving] = useState(false); // Loading state for save button
 
   // On initial load, check if we have a stored token and validate it via the proxy
   useEffect(() => {
@@ -313,6 +314,7 @@ function App() {
   const handleSaveIncident = async (incidentData, originalSheetRowIndex) => {
     console.log("handleSaveIncident: incidentData before saving:", incidentData);
     console.log("handleSaveIncident: originalSheetRowIndex before saving:", originalSheetRowIndex);
+    setIsSaving(true);
     try {
       const isEdit = originalSheetRowIndex !== null;
 
@@ -326,7 +328,7 @@ function App() {
 
         if (isUserSigned || isDirectorSigned) {
           // Signed incident: mark old as deleted and create a new one
-          
+
           // 1. Mark original as deleted
           const deletedIncidentData = [...originalIncident];
           deletedIncidentData[12] = 'TRUE'; // Set 'Esborrat' to TRUE
@@ -347,6 +349,8 @@ function App() {
     } catch (err) {
       console.error("Error saving incident:", err);
       setError("Error en guardar la incidència. Verifiqueu la configuració y els permisos. (Detalles: " + err.message + ")");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -432,6 +436,25 @@ function App() {
     const exerciseIndex = headers.indexOf('Exercici');
     const deletedIndex = headers.indexOf('Esborrat');
 
+    // Helper function to parse date string to Date object for sorting
+    const parseDateForSorting = (dateStr) => {
+      if (!dateStr) return new Date(0); // Return epoch for empty dates
+      if (typeof dateStr !== 'string') return new Date(0);
+      
+      // Handle dd/mm/yyyy format
+      if (dateStr.includes('/')) {
+        const parts = dateStr.split('/');
+        if (parts.length === 3) {
+          return new Date(parts[2], parts[1] - 1, parts[0]);
+        }
+      }
+      // Handle yyyy-mm-dd format
+      if (dateStr.includes('-')) {
+        return new Date(dateStr);
+      }
+      return new Date(0);
+    };
+
     // 1. Map and pre-filter rows that are empty
     let allRows = masterIncidents.slice(1).map((row, index) => ({
         data: row,
@@ -441,6 +464,19 @@ function App() {
     // Separate deleted and active incidents
     const activeRows = allRows.filter(item => item.data[deletedIndex] !== 'TRUE');
     const deletedRows = allRows.filter(item => item.data[deletedIndex] === 'TRUE');
+
+    // Sort by date (most recent first)
+    activeRows.sort((a, b) => {
+      const dateA = parseDateForSorting(a.data[dataIniciIndex]);
+      const dateB = parseDateForSorting(b.data[dataIniciIndex]);
+      return dateB - dateA; // Descending order (most recent first)
+    });
+
+    deletedRows.sort((a, b) => {
+      const dateA = parseDateForSorting(a.data[dataIniciIndex]);
+      const dateB = parseDateForSorting(b.data[dataIniciIndex]);
+      return dateB - dateA; // Descending order (most recent first)
+    });
 
     let filteredActiveRows = activeRows;
     let filteredDeletedRows = deletedRows;
@@ -637,7 +673,7 @@ function App() {
                 </div>
 
                 {incidents.length > 1 ? (
-                  <div className="grid grid-cols-1 gap-4">
+                  <div className="grid grid-cols-1 gap-2">
                     {incidents.slice(1).map((item, rowIndex) => {
                       const isUserSigned = item.data[signaturaUsuariIndex] === 'TRUE' || item.data[signaturaUsuariIndex] === true || item.data[signaturaUsuariIndex] === 'true' || item.data[signaturaUsuariIndex] === 1;
                       const isDirectorSigned = item.data[signaturaDireccioIndex] === 'TRUE' || item.data[signaturaDireccioIndex] === true || item.data[signaturaDireccioIndex] === 'true' || item.data[signaturaDireccioIndex] === 1;
@@ -649,19 +685,19 @@ function App() {
 
                       return (
                         <Card key={item.originalSheetRowIndex} className="shadow-sm rounded-lg hover:shadow-md transition-shadow duration-200">
-                          <CardContent className="p-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 text-sm">
-                              <div><strong>Usuari:</strong> {item.data[userEmailIndex]}</div>
-                              <div><strong>Tipus:</strong> {item.data[tipusIndex]}</div>
-                              <div><strong>Duració:</strong> {item.data[duracioIndex]}</div>
-                              <div><strong>Inici:</strong> {formatDateForDisplay(item.data[dataIniciIndex])} {formatTimeForDisplay(item.data[horaIniciIndex])}</div>
-                              <div><strong>Fi:</strong> {item.data[dataFiIndex] && item.data[dataFiIndex].trim() !== '' ? 
-                                `${formatDateForDisplay(item.data[dataFiIndex])} ${formatTimeForDisplay(item.data[horaFiIndex])}` : 
-                                (item.data[horaFiIndex] && item.data[horaFiIndex].trim() !== '' ? 
-                                  `${formatTimeForDisplay(item.data[horaFiIndex])}` : 
+                          <CardContent className="p-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-xs">
+                              <div className="truncate"><strong>Usuari:</strong> {item.data[userEmailIndex]}</div>
+                              <div className="truncate"><strong>Tipus:</strong> {item.data[tipusIndex]}</div>
+                              <div className="truncate"><strong>Duració:</strong> {item.data[duracioIndex]}</div>
+                              <div className="truncate"><strong>Inici:</strong> {formatDateForDisplay(item.data[dataIniciIndex])} {formatTimeForDisplay(item.data[horaIniciIndex])}</div>
+                              <div className="truncate"><strong>Fi:</strong> {item.data[dataFiIndex] && item.data[dataFiIndex].trim() !== '' ?
+                                `${formatDateForDisplay(item.data[dataFiIndex])} ${formatTimeForDisplay(item.data[horaFiIndex])}` :
+                                (item.data[horaFiIndex] && item.data[horaFiIndex].trim() !== '' ?
+                                  `${formatTimeForDisplay(item.data[horaFiIndex])}` :
                                   'No especificada')}</div>
-                              <div className="flex items-center">
-                                <strong>Observacions:</strong> 
+                              <div className="truncate flex items-center">
+                                <strong>Observacions:</strong>
                                 {observacions && (
                                   <Tooltip>
                                     <TooltipTrigger asChild>
@@ -675,19 +711,17 @@ function App() {
                                   </Tooltip>
                                 )}
                               </div>
-                              <div>
-                                <strong>Signatura Usuari:</strong> <input type="checkbox" checked={isUserSigned} readOnly />
+                              <div className="truncate"><strong>Signatura Usuari:</strong> <input type="checkbox" checked={isUserSigned} readOnly />
                                 {isUserSigned && <span className="block text-xs text-gray-500">{formatTimestampForDisplay(item.data[timestampSignaturaUsuariIndex])}</span>}
                               </div>
-                              <div>
-                                <strong>Signatura Direcció:</strong> <input type="checkbox" checked={isDirectorSigned} readOnly />
+                              <div className="truncate"><strong>Signatura Direcció:</strong> <input type="checkbox" checked={isDirectorSigned} readOnly />
                                 {isDirectorSigned && <span className="block text-xs text-gray-500">{formatTimestampForDisplay(item.data[timestampSignaturaDireccioIndex])}</span>}
                               </div>
                             </div>
-                            <div className="mt-4 flex flex-wrap gap-2">
+                            <div className="mt-2 flex flex-wrap gap-2">
                               {canEdit && <Button
                                 size="sm"
-                                className="bg-[#288185] hover:bg-[#1e686b] text-white"
+                                className="bg-[#288185] hover:bg-[#1e686b] text-white h-8 px-3 text-xs"
                                 onClick={() => handleEditClick(item.data, item.originalSheetRowIndex)}
                               >
                                 Editar
@@ -695,7 +729,7 @@ function App() {
                               {canUserSign && (
                                 <Button
                                   size="sm"
-                                  className="bg-green-600 hover:bg-green-700 text-white"
+                                  className="bg-green-600 hover:bg-green-700 text-white h-8 px-3 text-xs"
                                   onClick={() => handleSignClick(item.data, item.originalSheetRowIndex, 'user')}
                                 >
                                   Signar (Usuari)
@@ -704,7 +738,7 @@ function App() {
                               {canDirectorSign && (
                                 <Button
                                   size="sm"
-                                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                                  className="bg-blue-600 hover:bg-blue-700 text-white h-8 px-3 text-xs"
                                   onClick={() => handleSignClick(item.data, item.originalSheetRowIndex, 'director')}
                                 >
                                   Signar (Direcció)
@@ -728,33 +762,33 @@ function App() {
               <TabsContent value="modified">
                 <h3 className="text-xl font-semibold mb-3">Incidències modificades després de signar</h3>
                 {modifiedIncidents.length > 1 ? (
-                  <div className="grid grid-cols-1 gap-4">
+                  <div className="grid grid-cols-1 gap-2">
                     {modifiedIncidents.slice(1).map((item, rowIndex) => {
                       const isUserSigned = item.data[signaturaUsuariIndex] === 'TRUE' || item.data[signaturaUsuariIndex] === true || item.data[signaturaUsuariIndex] === 'true' || item.data[signaturaUsuariIndex] === 1;
                       const isDirectorSigned = item.data[signaturaDireccioIndex] === 'TRUE' || item.data[signaturaDireccioIndex] === true || item.data[signaturaDireccioIndex] === 'true' || item.data[signaturaDireccioIndex] === 1;
 
                       return (
                         <Card key={item.originalSheetRowIndex} className="shadow-sm rounded-lg">
-                          <CardContent className="p-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 text-sm">
-                              <div><strong>Usuari:</strong> {item.data[userEmailIndex]}</div>
-                              <div><strong>Inici:</strong> {formatDateForDisplay(item.data[dataIniciIndex])} {formatTimeForDisplay(item.data[horaIniciIndex])}</div>
-                              <div><strong>Fi:</strong> {item.data[dataFiIndex] && item.data[dataFiIndex].trim() !== '' ? 
-                                `${formatDateForDisplay(item.data[dataFiIndex])} ${formatTimeForDisplay(item.data[horaFiIndex])}` : 
-                                (item.data[horaFiIndex] && item.data[horaFiIndex].trim() !== '' ? 
-                                  `${formatTimeForDisplay(item.data[horaFiIndex])}` : 
+                          <CardContent className="p-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-xs">
+                              <div className="truncate"><strong>Usuari:</strong> {item.data[userEmailIndex]}</div>
+                              <div className="truncate"><strong>Inici:</strong> {formatDateForDisplay(item.data[dataIniciIndex])} {formatTimeForDisplay(item.data[horaIniciIndex])}</div>
+                              <div className="truncate"><strong>Fi:</strong> {item.data[dataFiIndex] && item.data[dataFiIndex].trim() !== '' ?
+                                `${formatDateForDisplay(item.data[dataFiIndex])} ${formatTimeForDisplay(item.data[horaFiIndex])}` :
+                                (item.data[horaFiIndex] && item.data[horaFiIndex].trim() !== '' ?
+                                  `${formatTimeForDisplay(item.data[horaFiIndex])}` :
                                   'No especificada')}</div>
-                              <div><strong>Duració:</strong> {item.data[duracioIndex]}</div>
-                              <div><strong>Tipus:</strong> {item.data[tipusIndex]}</div>
-                              <div>
+                              <div className="truncate"><strong>Duració:</strong> {item.data[duracioIndex]}</div>
+                              <div className="truncate"><strong>Tipus:</strong> {item.data[tipusIndex]}</div>
+                              <div className="truncate">
                                 <strong>Signatura Usuari:</strong> <input type="checkbox" checked={isUserSigned} readOnly />
                                 {isUserSigned && <span className="block text-xs text-gray-500">{item.data[timestampSignaturaUsuariIndex]}</span>}
                               </div>
-                              <div>
+                              <div className="truncate">
                                 <strong>Signatura Direcció:</strong> <input type="checkbox" checked={isDirectorSigned} readOnly />
                                 {isDirectorSigned && <span className="block text-xs text-gray-500">{item.data[timestampSignaturaDireccioIndex]}</span>}
                               </div>
-                              <div>
+                              <div className="truncate">
                                 <strong>Esborrat:</strong> <input type="checkbox" checked={item.data[esborratIndex] === 'TRUE'} readOnly />
                               </div>
                             </div>
@@ -854,6 +888,7 @@ function App() {
                 profile={profile}
                 users={users}
                 incidentTypes={incidentTypes}
+                isSaving={isSaving}
               />
             </DialogContent>
           </Dialog>
