@@ -201,7 +201,7 @@ const AddIncidentForm = ({
         'Timestamp Signatura Usuari': incidentToEdit[9] || '',
         'Signatura Direcció': incidentToEdit[10] === 'TRUE' || incidentToEdit[10] === true || incidentToEdit[10] === 'true' || incidentToEdit[10] === 1,
         'Timestamp Signatura Direcció': incidentToEdit[11] || '',
-        'Esborrat': incidentToEdit[12] === 'TRUE',
+        'Esborrat': incidentToEdit[12] === 'TRUE' || incidentToEdit[12] === true || incidentToEdit[12] === 'true' || incidentToEdit[12] === 1,
         'Observacions': incidentToEdit[13] || '',
       };
       

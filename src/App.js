@@ -462,8 +462,14 @@ function App() {
     })).filter(item => item.data[dataIniciIndex] && item.data[dataIniciIndex].trim() !== '');
 
     // Separate deleted and active incidents
-    const activeRows = allRows.filter(item => item.data[deletedIndex] !== 'TRUE');
-    const deletedRows = allRows.filter(item => item.data[deletedIndex] === 'TRUE');
+    const activeRows = allRows.filter(item => {
+        const isDeleted = item.data[deletedIndex] === 'TRUE' || item.data[deletedIndex] === true || item.data[deletedIndex] === 'true' || item.data[deletedIndex] === 1;
+        return !isDeleted;
+    });
+    const deletedRows = allRows.filter(item => {
+        const isDeleted = item.data[deletedIndex] === 'TRUE' || item.data[deletedIndex] === true || item.data[deletedIndex] === 'true' || item.data[deletedIndex] === 1;
+        return isDeleted;
+    });
 
     // Sort by date (most recent first)
     activeRows.sort((a, b) => {
@@ -789,7 +795,7 @@ function App() {
                                 {isDirectorSigned && <span className="block text-xs text-gray-500">{item.data[timestampSignaturaDireccioIndex]}</span>}
                               </div>
                               <div className="truncate">
-                                <strong>Esborrat:</strong> <input type="checkbox" checked={item.data[esborratIndex] === 'TRUE'} readOnly />
+                                <strong>Esborrat:</strong> <input type="checkbox" checked={item.data[esborratIndex] === 'TRUE' || item.data[esborratIndex] === true || item.data[esborratIndex] === 'true' || item.data[esborratIndex] === 1} readOnly />
                               </div>
                             </div>
                           </CardContent>

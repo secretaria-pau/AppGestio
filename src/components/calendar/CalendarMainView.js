@@ -46,7 +46,10 @@ const transformIncidentsToEvents = (sheetData, profile) => {
   }
 
   return data
-    .filter(row => row[deletedIndex] !== 'TRUE' && row[dateIniciIndex]) // Filter out deleted and empty incidents
+    .filter(row => {
+        const isDeleted = row[deletedIndex] === 'TRUE' || row[deletedIndex] === true || row[deletedIndex] === 'true' || row[deletedIndex] === 1;
+        return !isDeleted && row[dateIniciIndex];
+    }) // Filter out deleted and empty incidents
     .map(row => {
       const parseDateTime = (dateStr, timeStr) => {
         let dateParts;
