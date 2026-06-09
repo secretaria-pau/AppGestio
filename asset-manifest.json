@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/AppGestio/static/css/main.3019e740.css",
-    "main.js": "/AppGestio/static/js/main.118e59d2.js",
+    "main.js": "/AppGestio/static/js/main.c74b0581.js",
     "static/js/453.f2e324f4.chunk.js": "/AppGestio/static/js/453.f2e324f4.chunk.js",
     "index.html": "/AppGestio/index.html",
     "main.3019e740.css.map": "/AppGestio/static/css/main.3019e740.css.map",
-    "main.118e59d2.js.map": "/AppGestio/static/js/main.118e59d2.js.map",
+    "main.c74b0581.js.map": "/AppGestio/static/js/main.c74b0581.js.map",
     "453.f2e324f4.chunk.js.map": "/AppGestio/static/js/453.f2e324f4.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.3019e740.css",
-    "static/js/main.118e59d2.js"
+    "static/js/main.c74b0581.js"
   ]
 }
