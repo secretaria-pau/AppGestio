@@ -210,7 +210,7 @@ function CalendarMainView({ onBackClick, accessToken, profile }) {
       let fetchedEvents = [];
       if (activeCalendar === CALENDARS.incidents.id) {
         // Incidents are fetched all at once, not by date range
-        const incidentData = await fetchSheetData('Incidències!A:N', accessToken);
+        const incidentData = await fetchSheetData(accessToken, 'Incidències', 'A:N');
         fetchedEvents = transformIncidentsToEvents(incidentData, profile);
       } else {
         const momentDate = moment(calendarDate);

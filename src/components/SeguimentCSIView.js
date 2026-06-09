@@ -52,7 +52,7 @@ const SeguimentCSIView = ({ onBackClick, accessToken, profile }) => {
 
     const fetchData = useCallback((sheetName) => {
         if (isMobile()) {
-            return csiFetchData(sheetName, accessToken);
+            return csiFetchData(accessToken, sheetName);
         } else {
             return new Promise((resolve, reject) => {
                 const callbackName = `jsonp_callback_${Date.now()}_${Math.floor(Math.random() * 1000)}`;

@@ -177,7 +177,7 @@ export async function exportMantenimentPendingIncidents(accessToken) {
 }
 
 
-export async function getSheetData(sheetName, accessToken) {
+export async function getSheetData(accessToken, sheetName) {
   try {
     console.log(`Fetching data for sheet: ${sheetName}...`);
     const url = `${BASE_URL}/${SPREADSHEET_ID}/values/${sheetName}!A2:C`;
@@ -192,11 +192,11 @@ export async function getSheetData(sheetName, accessToken) {
 
 /**
  * Obtiene el valor de una celda o rango específico de la hoja de cálculo.
- * @param {string} range - El rango a leer, por ejemplo, 'Configuració!Z1001'.
  * @param {string} accessToken - El token de acceso de Google.
+ * @param {string} range - El rango a leer, por ejemplo, 'Configuració!Z1001'.
  * @returns {Promise<string|Array|null>} - El valor de la celda o un array de valores.
  */
-export async function getSheetCellValue(range, accessToken) {
+export async function getSheetCellValue(accessToken, range) {
   try {
     const url = `${BASE_URL}/${SPREADSHEET_ID}/values/${range}`;
     const response = await fetchGoogleAPI(url, accessToken);
@@ -220,7 +220,7 @@ export async function getSheetCellValue(range, accessToken) {
   }
 }
 
-export async function updateSheetData(range, values, accessToken) {
+export async function updateSheetData(accessToken, range, values) {
   try {
     console.log(`Updating sheet data for range: ${range} with values:`, values);
     const url = `${BASE_URL}/${SPREADSHEET_ID}/values/${range}?valueInputOption=USER_ENTERED`;
@@ -244,7 +244,7 @@ export async function updateSheetData(range, values, accessToken) {
   }
 }
 
-export async function updateConfig(config, accessToken) {
+export async function updateConfig(accessToken, config) {
   try {
     console.log('Starting updateConfig...');
     const url = `${BASE_URL}/${SPREADSHEET_ID}/values/Configuració!A2:F?valueInputOption=USER_ENTERED`;
